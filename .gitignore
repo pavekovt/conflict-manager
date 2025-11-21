@@ -1,1 +1,47 @@
+# IDE
 .idea/**
+*.iml
+*.iws
+*.ipr
+.vscode/
+
+# Kotlin / JVM
+*.class
+*.jar
+*.war
+*.ear
+.gradle/
+build/
+out/
+target/
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (for frontend)
+node_modules/
+.next/
+.turbo/
+dist/
+
+# Docker
+docker-compose.override.yml
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~
