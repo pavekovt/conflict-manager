@@ -23,7 +23,8 @@ fun Application.configureDatabase() {
             AISummaries,
             Decisions,
             Retrospectives,
-            RetrospectiveNotes
+            RetrospectiveNotes,
+            RetrospectiveUsers
         )
     }
 }

@@ -1,5 +1,6 @@
-package repository
+package me.pavekovt.repository
 
+import me.pavekovt.db.dbQuery
 import me.pavekovt.dto.UserDTO
 import me.pavekovt.entity.Users
 import org.jetbrains.exposed.v1.core.ResultRow
@@ -7,12 +8,11 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insertReturning
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.update
 import java.util.*
 
 class UserRepositoryImpl : UserRepository {
-    override suspend fun create(email: String, passwordHash: String, name: String): UserDTO = suspendTransaction {
+    override suspend fun create(email: String, passwordHash: String, name: String): UserDTO = dbQuery {
         Users.insertReturning {
             it[Users.email] = email
             it[Users.passwordHash] = passwordHash
@@ -22,28 +22,28 @@ class UserRepositoryImpl : UserRepository {
             .toUserDTO()
     }
 
-    override suspend fun findByEmail(email: String): UserDTO? = suspendTransaction {
+    override suspend fun findByEmail(email: String): UserDTO? = dbQuery {
         Users.selectAll()
             .where { Users.email eq email }
             .singleOrNull()
             ?.toUserDTO()
     }
 
-    override suspend fun getUserPassword(email: String): String? = suspendTransaction {
+    override suspend fun getUserPassword(email: String): String? = dbQuery {
         Users.select(Users.passwordHash)
             .where { Users.email eq email }
             .singleOrNull()
             ?.get(Users.passwordHash)
     }
 
-    override suspend fun findById(id: UUID): UserDTO? = suspendTransaction {
+    override suspend fun findById(id: UUID): UserDTO? = dbQuery {
         Users.selectAll()
             .where { Users.id eq id }
             .singleOrNull()
             ?.toUserDTO()
     }
 
-    override suspend fun updateNotificationToken(userId: UUID, token: String?): Unit = suspendTransaction {
+    override suspend fun updateNotificationToken(userId: UUID, token: String?): Unit = dbQuery {
         Users.update({ Users.id eq userId }) {
             it[notificationToken] = token
         }

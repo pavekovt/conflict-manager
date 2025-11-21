@@ -1,4 +1,4 @@
-package repository
+package me.pavekovt.repository
 
 import me.pavekovt.dto.UserDTO
 import java.util.UUID

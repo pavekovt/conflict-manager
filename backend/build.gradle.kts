@@ -11,6 +11,10 @@ application {
     mainClass = "io.ktor.server.netty.EngineMain"
 }
 
+kotlin {
+    jvmToolchain(21)
+}
+
 dependencies {
     implementation(libs.koin.ktor)
     implementation(libs.koin.logger.slf4j)

@@ -23,6 +23,13 @@ object RetrospectiveNotes : Table("retrospective_notes") {
     override val primaryKey = PrimaryKey(retrospectiveId, noteId)
 }
 
+object RetrospectiveUsers : Table("retrospective_users") {
+    val retrospectiveId = reference("retrospective_id", Retrospectives)
+    val userId = reference("user_id", Users)
+
+    override val primaryKey = PrimaryKey(retrospectiveId, userId)
+}
+
 enum class RetroStatus {
     SCHEDULED,
     IN_PROGRESS,
