@@ -432,3 +432,4 @@ Concept: Couple's Conflict Resolution Manager with AI-Assisted Retrospectives
   - I will code everything myself for practice
   - Estimated timeline: ~10 weeks for MVP
   - Can be adjusted based on available time
+- We are using v1 exposed

@@ -1,20 +1,29 @@
 package me.pavekovt.configuration
 
 import io.ktor.server.application.*
-import me.pavekovt.entity.Users
+import me.pavekovt.entity.*
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 fun Application.configureDatabase() {
-    val db = Database.connect(
+    Database.connect(
         url = "jdbc:postgresql://localhost:5432/conflict_manager",
-        user = "dev_user",
         driver = "org.postgresql.Driver",
-        password = "dev_password",
+        user = "dev_user",
+        password = "dev_password"
     )
 
     transaction {
-        SchemaUtils.create(Users)
+        SchemaUtils.create(
+            Users,
+            Notes,
+            Conflicts,
+            Resolutions,
+            AISummaries,
+            Decisions,
+            Retrospectives,
+            RetrospectiveNotes
+        )
     }
 }
