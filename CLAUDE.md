@@ -535,7 +535,7 @@ Main remaining work:
 - No `.slice()` method - just use `selectAll()` and map
 - `insertReturning` returns ResultRow, access via `resultRow[Table.column]`
 - Count: `query.count()` not `slice(column.count())`
-- Transactions: Use `newSuspendedTransaction(Dispatchers.IO)` for suspend functions
+- Transactions: Use `newSuspendedTransaction(Dispatchers.IO)` for suspend functions `dbQuery` util is provided
 
 **Testing Patterns:**
 - MockK for mocking repositories/dependencies
