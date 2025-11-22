@@ -8,6 +8,7 @@ fun Application.configureRouting() {
     routing {
         route("/api/") {
             authRouting()
+            partnershipRouting()
             noteRouting()
             conflictRouting()
             decisionRouting()

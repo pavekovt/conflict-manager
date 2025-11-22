@@ -14,19 +14,24 @@ class ConflictService(
     private val resolutionRepository: ResolutionRepository,
     private val aiSummaryRepository: AISummaryRepository,
     private val decisionRepository: DecisionRepository,
-    private val aiProvider: AIProvider
+    private val aiProvider: AIProvider,
+    private val partnershipService: PartnershipService
 ) {
 
     suspend fun create(userId: UUID): ConflictDTO {
+        // Verify user has an active partnership
+        partnershipService.requirePartnership(userId)
         return conflictRepository.create(userId)
     }
 
     suspend fun findById(conflictId: UUID, userId: UUID): ConflictDTO? {
         val conflict = conflictRepository.findById(conflictId) ?: return null
 
-        // Check if user is involved in this conflict
-        val isInvolved = conflict.initiatedBy == userId.toString() ||
-                resolutionRepository.hasResolution(conflictId, userId)
+        // Verify user has access to this conflict (must be partner with initiator)
+        val initiatorId = UUID.fromString(conflict.initiatedBy)
+        val partnerId = partnershipService.getPartnerId(userId)
+
+        val isInvolved = (userId == initiatorId || partnerId == initiatorId)
 
         return if (isInvolved) conflict else null
     }
@@ -41,6 +46,10 @@ class ConflictService(
         resolutionText: String
     ): ConflictDTO {
         require(resolutionText.isNotBlank()) { "Resolution text cannot be blank" }
+
+        // Verify user has access to this conflict
+        val conflict = findById(conflictId, userId)
+            ?: throw IllegalStateException("Conflict not found or you don't have permission")
 
         // Check if user already submitted
         if (resolutionRepository.hasResolution(conflictId, userId)) {
@@ -76,10 +85,7 @@ class ConflictService(
         val conflict = findById(conflictId, userId)
             ?: throw IllegalStateException("Conflict not found or you don't have permission")
 
-        if (conflict.status != "summary_generated" &&
-            conflict.status != "refinement" &&
-            conflict.status != "approved"
-        ) {
+        if (conflict.status !in listOf(ConflictStatus.SUMMARY_GENERATED, ConflictStatus.REFINEMENT, ConflictStatus.APPROVED)) {
             throw IllegalStateException("Summary not yet generated - both partners must submit resolutions first")
         }
 

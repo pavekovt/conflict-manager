@@ -57,15 +57,17 @@ fun Application.configureFrameworks() {
             single<AISummaryRepository> { AISummaryRepositoryImpl() }
             single<DecisionRepository> { DecisionRepositoryImpl() }
             single<RetrospectiveRepository> { RetrospectiveRepositoryImpl() }
+            single<PartnershipRepository> { PartnershipRepositoryImpl() }
 
             /**
              * Services
              */
             single { AuthService(get(), get()) }
             single { NoteService(get()) }
-            single { ConflictService(get(), get(), get(), get(), get()) }
-            single { DecisionService(get()) }
-            single { RetrospectiveService(get(), get(), get()) }
+            single { PartnershipService(get(), get()) }
+            single { ConflictService(get(), get(), get(), get(), get(), get()) }
+            single { DecisionService(get(), get()) }
+            single { RetrospectiveService(get(), get(), get(), get()) }
         })
     }
 }

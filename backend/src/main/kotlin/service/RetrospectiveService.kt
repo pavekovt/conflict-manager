@@ -15,11 +15,15 @@ import kotlinx.datetime.LocalDateTime
 class RetrospectiveService(
     private val retrospectiveRepository: RetrospectiveRepository,
     private val noteRepository: NoteRepository,
-    private val aiProvider: AIProvider
+    private val aiProvider: AIProvider,
+    private val partnershipService: PartnershipService
 ) {
 
-    suspend fun create(scheduledDate: String?, userIds: List<UUID>): RetrospectiveDTO {
+    suspend fun create(scheduledDate: String?, currentUserId: UUID): RetrospectiveDTO {
         val scheduledDateTime = scheduledDate?.let { LocalDateTime.parse(it) }
+
+        // Verify user has an active partnership
+        val partnerId = partnershipService.requirePartnership(currentUserId)
 
         val status = if (scheduledDateTime != null) {
             RetroStatus.SCHEDULED
@@ -27,11 +31,14 @@ class RetrospectiveService(
             RetroStatus.IN_PROGRESS
         }
 
+        // Create retrospective for both partners
+        val userIds = listOf(currentUserId, partnerId)
         return retrospectiveRepository.create(scheduledDateTime, status, userIds)
     }
 
-    suspend fun findAll(): List<RetrospectiveDTO> {
-        return retrospectiveRepository.findAll()
+    suspend fun findAll(currentUserId: UUID): List<RetrospectiveDTO> {
+        // Only show retrospectives for this user's partnership
+        return retrospectiveRepository.findByUser(currentUserId)
     }
 
     suspend fun findByUser(userId: UUID): List<RetrospectiveDTO> {

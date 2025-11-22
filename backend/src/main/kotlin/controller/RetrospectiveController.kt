@@ -20,17 +20,15 @@ fun Route.retrospectiveRouting() {
                 val currentUserId = call.getCurrentUserId()
                 val request = call.receive<CreateRetrospectiveRequest>()
 
-                // If userIds provided, use those; otherwise default to current user only
-                val userIds = request.userIds?.map { UUID.fromString(it) } ?: listOf(currentUserId)
-
-                val retro = retroService.create(request.scheduledDate, userIds)
+                // Partnership is automatically handled in service (creates for both partners)
+                val retro = retroService.create(request.scheduledDate, currentUserId)
                 call.respond(retro)
             }
 
             // Get my retrospectives (only ones where I'm a participant)
             get {
                 val userId = call.getCurrentUserId()
-                val retros = retroService.findByUser(userId)
+                val retros = retroService.findAll(userId)
                 call.respond(retros)
             }
 

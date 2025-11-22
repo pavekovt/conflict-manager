@@ -1,0 +1,1116 @@
+{
+	"info": {
+		"_postman_id": "conflict-manager-api",
+		"name": "Morning Brief API",
+		"description": "Couple's Conflict Resolution Manager API with JWT Authentication",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{accessToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-attach token to all authenticated requests",
+					"if (pm.collectionVariables.get('accessToken')) {",
+					"    pm.request.headers.add({",
+					"        key: 'Authorization',",
+					"        value: 'Bearer ' + pm.collectionVariables.get('accessToken')",
+					"    });",
+					"}"
+				]
+			}
+		}
+	],
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('accessToken', jsonData.token);",
+									"    pm.collectionVariables.set('refreshToken', jsonData.refreshToken);",
+									"    console.log('Tokens saved to collection variables');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{user1Email}}\",\n  \"name\": \"{{user1Name}}\",\n  \"password\": \"{{user1Password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('accessToken', jsonData.token);",
+									"    pm.collectionVariables.set('refreshToken', jsonData.refreshToken);",
+									"    console.log('Tokens saved to collection variables');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{user1Email}}\",\n  \"password\": \"{{user1Password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('accessToken', jsonData.token);",
+									"    pm.collectionVariables.set('refreshToken', jsonData.refreshToken);",
+									"    console.log('Tokens refreshed and saved');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/refresh",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/logout",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Partnerships",
+			"item": [
+				{
+					"name": "Send Partner Invitation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 201', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('lastPartnershipId', jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"partnerEmail\": \"{{user2Email}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/partnerships/invite",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"partnerships",
+								"invite"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Invitations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/partnerships/invitations",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"partnerships",
+								"invitations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Accept Invitation",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/partnerships/{{lastPartnershipId}}/accept",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"partnerships",
+								"{{lastPartnershipId}}",
+								"accept"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reject Invitation",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/partnerships/{{lastPartnershipId}}/reject",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"partnerships",
+								"{{lastPartnershipId}}",
+								"reject"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current Partnership",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/partnerships/current",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"partnerships",
+								"current"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "End Partnership",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/partnerships/current",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"partnerships",
+								"current"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Notes",
+			"item": [
+				{
+					"name": "Create Note",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200 or 201', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});",
+									"",
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('lastNoteId', jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"I feel frustrated when dishes are left in the sink overnight\",\n  \"mood\": \"frustrated\",\n  \"status\": \"draft\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/notes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"notes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Notes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/notes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"notes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Notes by Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/notes?status=draft",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"notes"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "draft"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Note by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/notes/{{lastNoteId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"notes",
+								"{{lastNoteId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Note",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"ready_for_discussion\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/notes/{{lastNoteId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"notes",
+								"{{lastNoteId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Note",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/notes/{{lastNoteId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"notes",
+								"{{lastNoteId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Conflicts",
+			"item": [
+				{
+					"name": "Initiate Conflict",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200 or 201', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});",
+									"",
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('lastConflictId', jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/conflicts",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"conflicts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Conflicts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/conflicts",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"conflicts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Conflict by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/conflicts/{{lastConflictId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"conflicts",
+								"{{lastConflictId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Resolution",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"resolutionText\": \"We agreed that I will do the dishes immediately after dinner, and you will handle the morning cleanup.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/conflicts/{{lastConflictId}}/resolutions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"conflicts",
+								"{{lastConflictId}}",
+								"resolutions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get AI Summary",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/conflicts/{{lastConflictId}}/summary",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"conflicts",
+								"{{lastConflictId}}",
+								"summary"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Approve Summary",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/conflicts/{{lastConflictId}}/approve",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"conflicts",
+								"{{lastConflictId}}",
+								"approve"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Request Refinement",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"feedback\": \"The summary doesn't capture that we agreed to alternate who does dishes each week.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/conflicts/{{lastConflictId}}/request-refinement",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"conflicts",
+								"{{lastConflictId}}",
+								"request-refinement"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Archive Conflict",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/conflicts/{{lastConflictId}}/archive",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"conflicts",
+								"{{lastConflictId}}",
+								"archive"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Decisions",
+			"item": [
+				{
+					"name": "Get All Decisions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/decisions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"decisions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Decisions by Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/decisions?status=active",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"decisions"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "active"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Decision by ID",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// You need to set lastDecisionId manually or from a previous response"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/decisions/{{lastDecisionId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"decisions",
+								"{{lastDecisionId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Decision as Reviewed",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/decisions/{{lastDecisionId}}/review",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"decisions",
+								"{{lastDecisionId}}",
+								"review"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Archive Decision",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/decisions/{{lastDecisionId}}/archive",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"decisions",
+								"{{lastDecisionId}}",
+								"archive"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Retrospectives",
+			"item": [
+				{
+					"name": "Trigger Manual Retro",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200 or 201', function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+									"});",
+									"",
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('lastRetroId', jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/retrospectives",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"retrospectives"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Retrospectives",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/retrospectives",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"retrospectives"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Retro by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/retrospectives/{{lastRetroId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"retrospectives",
+								"{{lastRetroId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Retro Notes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/retrospectives/{{lastRetroId}}/notes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"retrospectives",
+								"{{lastRetroId}}",
+								"notes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Note to Retro",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"noteId\": \"{{lastNoteId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/retrospectives/{{lastRetroId}}/add-note",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"retrospectives",
+								"{{lastRetroId}}",
+								"add-note"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Complete Retro",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"summary\": \"We discussed the dishes situation and agreed on a new schedule. Both partners feel heard and committed to the plan.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/retrospectives/{{lastRetroId}}/complete",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"retrospectives",
+								"{{lastRetroId}}",
+								"complete"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Retro",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/retrospectives/{{lastRetroId}}/cancel",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"retrospectives",
+								"{{lastRetroId}}",
+								"cancel"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Notifications",
+			"item": [
+				{
+					"name": "Subscribe to Notifications",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"device-push-notification-token-here\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/notifications/subscribe",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"notifications",
+								"subscribe"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Unsubscribe from Notifications",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/notifications/unsubscribe",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"notifications",
+								"unsubscribe"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refreshToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "lastNoteId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "lastConflictId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "lastDecisionId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "lastRetroId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "lastPartnershipId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

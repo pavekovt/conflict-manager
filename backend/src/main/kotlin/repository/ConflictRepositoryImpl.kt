@@ -102,7 +102,7 @@ class ConflictRepositoryImpl : ConflictRepository {
         return ConflictDTO(
             id = conflictId.toString(),
             initiatedBy = initiatedBy.toString(),
-            status = conflict[Conflicts.status].name.lowercase(),
+            status = conflict[Conflicts.status],
             createdAt = conflict[Conflicts.createdAt].toString(),
             myResolutionSubmitted = resolutionCount > 0,
             partnerResolutionSubmitted = resolutionCount == 2L,

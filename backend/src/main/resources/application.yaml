@@ -5,12 +5,9 @@ ktor:
     deployment:
         port: 8080
 postgres:
-  url: "jdbc:postgresql://localhost/default"
-  user: username
-  password: passwordjwt
-  domain: "https://jwt-provider-domain/"
-  audience: "jwt-audience"
-  realm: "ktor sample app"
+  url: "jdbc:postgresql://localhost/conflict_manager"
+  user: dev_user
+  password: dev_password
 
 
 jwt:
