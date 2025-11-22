@@ -83,28 +83,20 @@ class ConflictService(
             throw IllegalStateException("Summary not yet generated - both partners must submit resolutions first")
         }
 
-        val summary = aiSummaryRepository.findByConflict(conflictId)
-            ?: throw IllegalStateException("Summary not found")
-
-        // Determine which user is which for approval tracking
+        // Get both users involved in the conflict
         val resolutions = resolutionRepository.findByConflict(conflictId)
-        val userIds = resolutions.map { UUID.fromString(it.userId) }.sorted()
+        val allUserIds = resolutions.map { UUID.fromString(it.userId) }
 
-        if (userIds.size != 2) {
+        if (allUserIds.size != 2) {
             throw IllegalStateException("Invalid conflict state")
         }
 
-        val isUser1 = userId == userIds[0]
-        val partnerId = if (isUser1) userIds[1] else userIds[0]
+        // Get partner user ID (the other user in the conflict)
+        val partnerUserId = allUserIds.first { it != userId }
 
-        // Get approval status from database
-        val summaryData = aiSummaryRepository.findById(UUID.fromString(summary.id))
+        // Get summary with proper approval status for this user
+        return aiSummaryRepository.findByConflictForUser(conflictId, userId, partnerUserId)
             ?: throw IllegalStateException("Summary not found")
-
-        return summary.copy(
-            approvedByMe = if (isUser1) summaryData.approvedByMe else summaryData.approvedByPartner,
-            approvedByPartner = if (isUser1) summaryData.approvedByPartner else summaryData.approvedByMe
-        )
     }
 
     suspend fun approveSummary(summaryId: UUID, userId: UUID, conflictId: UUID) {

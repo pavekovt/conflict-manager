@@ -29,6 +29,17 @@ class AISummaryRepositoryImpl : AISummaryRepository {
             ?.toAISummaryDTO()
     }
 
+    override suspend fun findByConflictForUser(
+        conflictId: UUID,
+        currentUserId: UUID,
+        partnerUserId: UUID
+    ): AISummaryDTO? = dbQuery {
+        AISummaries.selectAll()
+            .where { AISummaries.conflictId eq conflictId }
+            .singleOrNull()
+            ?.toAISummaryDTOForUser(currentUserId, partnerUserId)
+    }
+
     override suspend fun findById(summaryId: UUID): AISummaryDTO? = dbQuery {
         AISummaries.selectAll()
             .where { AISummaries.id eq summaryId }
@@ -41,22 +52,20 @@ class AISummaryRepositoryImpl : AISummaryRepository {
             .where { AISummaries.id eq summaryId }
             .singleOrNull() ?: return@dbQuery false
 
-        // Get both users involved in conflict (sorted for consistency)
-        val userIds = Resolutions
-            .selectAll()
-            .where { Resolutions.conflictId eq conflictId }
-            .map { it[Resolutions.userId].value }
-            .sorted()
+        val currentApprover1 = summary[AISummaries.approvedByUserId1]
+        val currentApprover2 = summary[AISummaries.approvedByUserId2]
 
-        if (userIds.size != 2) return@dbQuery false
+        // Check if user already approved
+        if (currentApprover1 == userId || currentApprover2 == userId) {
+            return@dbQuery false // Already approved
+        }
 
-        val isUser1 = userId == userIds[0]
-
+        // Add userId to first available slot
         AISummaries.update({ AISummaries.id eq summaryId }) {
-            if (isUser1) {
-                it[approvedByUser1] = true
-            } else {
-                it[approvedByUser2] = true
+            when {
+                currentApprover1 == null -> it[approvedByUserId1] = userId
+                currentApprover2 == null -> it[approvedByUserId2] = userId
+                else -> return@update // Both slots full (shouldn't happen in 2-person conflict)
             }
         } > 0
     }
@@ -66,7 +75,8 @@ class AISummaryRepositoryImpl : AISummaryRepository {
             .where { AISummaries.id eq summaryId }
             .singleOrNull()
             ?.let { row ->
-                row[AISummaries.approvedByUser1] && row[AISummaries.approvedByUser2]
+                row[AISummaries.approvedByUserId1] != null &&
+                row[AISummaries.approvedByUserId2] != null
             } ?: false
     }
 }
@@ -78,5 +88,23 @@ private fun ResultRow.toAISummaryDTO() = AISummaryDTO(
     provider = this[AISummaries.provider],
     approvedByMe = false, // Will be set by service layer based on current user
     approvedByPartner = false,
+    createdAt = this[AISummaries.createdAt].toString()
+)
+
+private fun ResultRow.toAISummaryDTOForUser(currentUserId: UUID, partnerUserId: UUID) = AISummaryDTO(
+    id = this[AISummaries.id].value.toString(),
+    conflictId = this[AISummaries.conflictId].value.toString(),
+    summaryText = this[AISummaries.summaryText],
+    provider = this[AISummaries.provider],
+    approvedByMe = run {
+        val approver1 = this[AISummaries.approvedByUserId1]
+        val approver2 = this[AISummaries.approvedByUserId2]
+        approver1 == currentUserId || approver2 == currentUserId
+    },
+    approvedByPartner = run {
+        val approver1 = this[AISummaries.approvedByUserId1]
+        val approver2 = this[AISummaries.approvedByUserId2]
+        approver1 == partnerUserId || approver2 == partnerUserId
+    },
     createdAt = this[AISummaries.createdAt].toString()
 )

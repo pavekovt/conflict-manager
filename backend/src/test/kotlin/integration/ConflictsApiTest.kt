@@ -229,44 +229,44 @@ class ConflictsApiTest : IntegrationTestBase() {
     }
 
     //TODO: fix the test
-//    @Test
-//    fun `PATCH approve should approve summary`() = runBlocking {
-//        // Given - create conflict with both resolutions
-//        val user1Token = registerUser("approve1@example.com", "User A")
-//        val user2Token = registerUser("approve2@example.com", "User B")
-//
-//        val createResponse = client.post("$baseUrl/api/conflicts") {
-//            header(HttpHeaders.Authorization, "Bearer $user1Token")
-//        }
-//        val conflict = createResponse.body<ConflictResponse>()
-//
-//        client.post("$baseUrl/api/conflicts/${conflict.id}/resolutions") {
-//            contentType(ContentType.Application.Json)
-//            header(HttpHeaders.Authorization, "Bearer $user1Token")
-//            setBody(SubmitResolutionRequest(resolutionText = "Resolution 1"))
-//        }
-//
-//        client.post("$baseUrl/api/conflicts/${conflict.id}/resolutions") {
-//            contentType(ContentType.Application.Json)
-//            header(HttpHeaders.Authorization, "Bearer $user2Token")
-//            setBody(SubmitResolutionRequest(resolutionText = "Resolution 2"))
-//        }
-//
-//        // When - User 1 approves summary
-//        val approveResponse = client.post("$baseUrl/api/conflicts/${conflict.id}/approve") {
-//            header(HttpHeaders.Authorization, "Bearer $user1Token")
-//        }
-//
-//        // Then
-//        assertEquals(HttpStatusCode.OK, approveResponse.status)
-//
-//        // Verify summary shows user1 approved
-//        val summaryResponse = client.get("$baseUrl/api/conflicts/${conflict.id}/summary") {
-//            header(HttpHeaders.Authorization, "Bearer $user1Token")
-//        }
-//        val summary = summaryResponse.body<AISummaryResponse>()
-//        assertEquals(true, summary.approvedByMe)
-//    }
+    @Test
+    fun `PATCH approve should approve summary`() = runBlocking {
+        // Given - create conflict with both resolutions
+        val user1Token = registerUser("approve1@example.com", "User A")
+        val user2Token = registerUser("approve2@example.com", "User B")
+
+        val createResponse = client.post("$baseUrl/api/conflicts") {
+            header(HttpHeaders.Authorization, "Bearer $user1Token")
+        }
+        val conflict = createResponse.body<ConflictResponse>()
+
+        client.post("$baseUrl/api/conflicts/${conflict.id}/resolutions") {
+            contentType(ContentType.Application.Json)
+            header(HttpHeaders.Authorization, "Bearer $user1Token")
+            setBody(SubmitResolutionRequest(resolutionText = "Resolution 1"))
+        }
+
+        client.post("$baseUrl/api/conflicts/${conflict.id}/resolutions") {
+            contentType(ContentType.Application.Json)
+            header(HttpHeaders.Authorization, "Bearer $user2Token")
+            setBody(SubmitResolutionRequest(resolutionText = "Resolution 2"))
+        }
+
+        // When - User 1 approves summary
+        val approveResponse = client.post("$baseUrl/api/conflicts/${conflict.id}/approve") {
+            header(HttpHeaders.Authorization, "Bearer $user1Token")
+        }
+
+        // Then
+        assertEquals(HttpStatusCode.OK, approveResponse.status)
+
+        // Verify summary shows user1 approved
+        val summaryResponse = client.get("$baseUrl/api/conflicts/${conflict.id}/summary") {
+            header(HttpHeaders.Authorization, "Bearer $user1Token")
+        }
+        val summary = summaryResponse.body<AISummaryResponse>()
+        assertEquals(true, summary.approvedByMe)
+    }
 
     @Test
     fun `PATCH request-refinement should change status to refinement`() = runBlocking {
