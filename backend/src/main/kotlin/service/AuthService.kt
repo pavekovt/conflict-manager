@@ -17,7 +17,6 @@ class AuthService(
 ) {
 
     suspend fun create(email: String, name: String, password: String): AuthResponse {
-        // Validate inputs BEFORE checking if user exists (prevent timing attacks)
         require(email.isNotBlank() && email.contains("@")) { "Invalid email format" }
         require(name.isNotBlank() && name.length >= 2) { "Name must be at least 2 characters" }
         require(password.length >= 8) { "Password must be at least 8 characters" }

@@ -6,10 +6,12 @@ import me.pavekovt.controller.*
 
 fun Application.configureRouting() {
     routing {
-        authRouting()
-        noteRouting()
-        conflictRouting()
-        decisionRouting()
-        retrospectiveRouting()
+        route("/api/") {
+            authRouting()
+            noteRouting()
+            conflictRouting()
+            decisionRouting()
+            retrospectiveRouting()
+        }
     }
 }

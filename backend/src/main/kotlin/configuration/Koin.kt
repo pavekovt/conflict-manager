@@ -16,10 +16,30 @@ fun Application.configureFrameworks() {
         slf4jLogger()
         modules(module {
             /**
+             * Application instance
+             */
+            single { this@configureFrameworks }
+
+            /**
              * Properties
              */
             single<AuthenticationProperties> {
-                property<AuthenticationProperties>("jwt")
+                val config = get<Application>().environment.config
+
+                AuthenticationProperties(
+                    secret = System.getProperty("JWT_SECRET")
+                        ?: config.propertyOrNull("jwt.secret")?.getString()
+                        ?: throw IllegalStateException("JWT secret not configured"),
+                    audience = System.getProperty("JWT_AUDIENCE")
+                        ?: config.propertyOrNull("jwt.audience")?.getString()
+                        ?: throw IllegalStateException("JWT audience not configured"),
+                    realm = System.getProperty("JWT_REALM")
+                        ?: config.propertyOrNull("jwt.realm")?.getString()
+                        ?: throw IllegalStateException("JWT realm not configured"),
+                    issuer = System.getProperty("JWT_ISSUER")
+                        ?: config.propertyOrNull("jwt.issuer")?.getString()
+                        ?: throw IllegalStateException("JWT issuer not configured")
+                )
             }
 
             /**

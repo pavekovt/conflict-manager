@@ -16,17 +16,24 @@ fun Application.configureStatusPages() {
             )
         }
 
+        exception<NotFoundException> { call, cause ->
+            call.respond(
+                HttpStatusCode.NotFound,
+                ErrorResponse(cause.message ?: "Not Found")
+            )
+        }
+
         exception<UserNotFoundException> { call, cause ->
             call.respond(
                 HttpStatusCode.Unauthorized,
-                ErrorResponse("Invalid email or password")
+                ErrorResponse(cause.message ?: "Invalid email or password")
             )
         }
 
         exception<WrongCredentialsException> { call, cause ->
             call.respond(
                 HttpStatusCode.Unauthorized,
-                ErrorResponse("Invalid email or password")
+                ErrorResponse(cause.message ?: "Invalid email or password")
             )
         }
 

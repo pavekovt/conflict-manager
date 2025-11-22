@@ -16,39 +16,44 @@ fun Route.decisionRouting() {
     val userRepository by inject<UserRepository>()
 
     authenticate("jwt") {
-        // Get all decisions
-        get("/api/decisions") {
-            val status = call.request.queryParameters["status"]
-            val decisions = decisionService.findAll(status)
-            call.respond(decisions)
-        }
+        route("/decisions") {
+            // Get all decisions
+            get {
+                val status = call.request.queryParameters["status"]
+                val decisions = decisionService.findAll(status)
+                call.respond(decisions)
+            }
 
-        // Get decision by ID
-        get("/api/decisions/{id}") {
-            val decisionId = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing decision ID"))
-            val decision = decisionService.findById(decisionId)
-            call.respond(decision)
-        }
+            // Get decision by ID
+            get("/{id}") {
+                val decisionId =
+                    UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing decision ID"))
+                val decision = decisionService.findById(decisionId)
+                call.respond(decision)
+            }
 
-        // Mark decision as reviewed
-        patch("/api/decisions/{id}/review") {
-            val decisionId = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing decision ID"))
-            val decision = decisionService.markReviewed(decisionId)
-            call.respond(decision)
-        }
+            // Mark decision as reviewed
+            patch("/{id}/review") {
+                val decisionId =
+                    UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing decision ID"))
+                val decision = decisionService.markReviewed(decisionId)
+                call.respond(decision)
+            }
 
-        // Archive decision
-        patch("/api/decisions/{id}/archive") {
-            val decisionId = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing decision ID"))
-            val decision = decisionService.archive(decisionId)
-            call.respond(decision)
-        }
+            // Archive decision
+            patch("/{id}/archive") {
+                val decisionId =
+                    UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing decision ID"))
+                val decision = decisionService.archive(decisionId)
+                call.respond(decision)
+            }
 
-        // Create manual decision (not from conflict)
-        post("/api/decisions") {
-            val request = call.receive<CreateDecisionRequest>()
-            val decision = decisionService.create(request.summary, request.category)
-            call.respond(decision)
+            // Create manual decision (not from conflict)
+            post {
+                val request = call.receive<CreateDecisionRequest>()
+                val decision = decisionService.create(request.summary, request.category)
+                call.respond(decision)
+            }
         }
     }
 }

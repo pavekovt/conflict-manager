@@ -5,11 +5,11 @@ import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
-import io.ktor.server.config.property
 import me.pavekovt.properties.AuthenticationProperties
+import org.koin.ktor.ext.inject
 
 fun Application.configureSecurity() {
-    val authConfig = property<AuthenticationProperties>("jwt")
+    val authConfig by inject<AuthenticationProperties>()
 
     authentication {
         jwt("jwt") {

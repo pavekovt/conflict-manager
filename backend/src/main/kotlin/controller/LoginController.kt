@@ -11,24 +11,25 @@ import org.koin.ktor.ext.inject
 
 fun Route.authRouting() {
     val authService by inject<AuthService>()
+    route("/auth") {
+        post("/login") {
+            val request = call.receive<LoginRequest>()
+            val response = authService.login(request.email, request.password)
+            call.respond(response)
+        }
 
-    post("/login") {
-        val request = call.receive<LoginRequest>()
-        val response = authService.login(request.email, request.password)
-        call.respond(response)
-    }
+        post("/register") {
+            val request = call.receive<RegisterRequest>()
+            val response = authService.create(request.email, request.name, request.password)
+            call.respond(response)
+        }
 
-    post("/register") {
-        val request = call.receive<RegisterRequest>()
-        val response = authService.create(request.email, request.name, request.password)
-        call.respond(response)
-    }
-
-    authenticate("jwt") {
-        get("/me") {
-            val principal = call.principal<JWTPrincipal>()
-            val username = principal?.get("username") ?: throw IllegalStateException("No username in token")
-            call.respond(mapOf("email" to username))
+        authenticate("jwt") {
+            get("/me") {
+                val principal = call.principal<JWTPrincipal>()
+                val username = principal?.get("username") ?: throw IllegalStateException("No username in token")
+                call.respond(mapOf("email" to username))
+            }
         }
     }
 }

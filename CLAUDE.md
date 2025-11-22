@@ -549,3 +549,4 @@ Main remaining work:
 - Clear separation of concerns (Repository → Service → Controller)
 - Comprehensive error handling with custom exceptions
 - Explicit relationships (junction tables) over implicit ones
+- user response.body<T>() for json exptracting from response in tests

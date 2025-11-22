@@ -1,0 +1,12 @@
+ktor:
+    application:
+        modules:
+            - me.pavekovt.ApplicationKt.module
+    deployment:
+        port: 0
+
+jwt:
+  secret: test-secret-key-for-jwt-that-is-long-enough-for-testing
+  issuer: test-issuer
+  audience: test-audience
+  realm: test-realm

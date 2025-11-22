@@ -2,7 +2,16 @@
   "permissions": {
     "allow": [
       "Bash(./gradlew test:*)",
-      "Bash(./gradlew cleanTest:*)"
+      "Bash(./gradlew cleanTest:*)",
+      "Bash(./gradlew compileTestKotlin:*)",
+      "Bash(./gradlew compileKotlin:*)",
+      "Bash(./gradlew clean:*)",
+      "Bash(timeout 60 ./gradlew test:*)",
+      "Bash(./gradlew:*)",
+      "Bash(docker:*)",
+      "Bash(timeout 90 ./gradlew test:*)",
+      "Bash(xargs:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

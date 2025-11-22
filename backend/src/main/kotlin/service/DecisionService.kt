@@ -2,6 +2,7 @@ package me.pavekovt.service
 
 import me.pavekovt.dto.DecisionDTO
 import me.pavekovt.entity.DecisionStatus
+import me.pavekovt.exception.NotFoundException
 import me.pavekovt.repository.DecisionRepository
 import java.util.UUID
 
@@ -26,26 +27,26 @@ class DecisionService(
 
     suspend fun findById(id: UUID): DecisionDTO {
         return decisionRepository.findById(id)
-            ?: throw IllegalStateException("Decision not found")
+            ?: throw NotFoundException()
     }
 
     suspend fun markReviewed(id: UUID): DecisionDTO {
         val success = decisionRepository.markReviewed(id)
         if (!success) {
-            throw IllegalStateException("Decision not found")
+            throw NotFoundException()
         }
 
         return decisionRepository.findById(id)
-            ?: throw IllegalStateException("Decision not found")
+            ?: throw NotFoundException()
     }
 
     suspend fun archive(id: UUID): DecisionDTO {
         val success = decisionRepository.archive(id)
         if (!success) {
-            throw IllegalStateException("Decision not found")
+            throw NotFoundException()
         }
 
         return decisionRepository.findById(id)
-            ?: throw IllegalStateException("Decision not found")
+            ?: throw NotFoundException()
     }
 }
