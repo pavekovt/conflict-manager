@@ -75,14 +75,6 @@ class DecisionServiceTest {
         coVerify { decisionRepository.create(null, summary, null) }
     }
 
-    @Test
-    fun `create should throw IllegalArgumentException for blank summary`() = runBlocking {
-        // When/Then
-        assertFailsWith<IllegalArgumentException> {
-            decisionService.create("   ", null)
-        }
-        coVerify(exactly = 0) { decisionRepository.create(any(), any(), any()) }
-    }
 
     @Test
     fun `findAll should return all decisions when status is null`() = runBlocking {
@@ -128,20 +120,11 @@ class DecisionServiceTest {
         coEvery { decisionRepository.findAll(DecisionStatus.REVIEWED) } returns decisions
 
         // When
-        val result = decisionService.findAll(status)
+        val result = decisionService.findAll(DecisionStatus.REVIEWED)
 
         // Then
         assertEquals(decisions, result)
         coVerify { decisionRepository.findAll(DecisionStatus.REVIEWED) }
-    }
-
-    @Test
-    fun `findAll should throw IllegalArgumentException for invalid status`() = runBlocking {
-        // When/Then
-        assertFailsWith<IllegalArgumentException> {
-            decisionService.findAll("invalid_status")
-        }
-        coVerify(exactly = 0) { decisionRepository.findAll(any()) }
     }
 
     @Test
@@ -168,12 +151,12 @@ class DecisionServiceTest {
     }
 
     @Test
-    fun `findById should throw IllegalStateException when decision not found`() = runBlocking {
+    fun `findById should throw NotFoundException when decision not found`() = runBlocking {
         // Given
         coEvery { decisionRepository.findById(decisionId) } returns null
 
         // When/Then
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<me.pavekovt.exception.NotFoundException> {
             decisionService.findById(decisionId)
         }
         coVerify { decisionRepository.findById(decisionId) }
@@ -205,12 +188,12 @@ class DecisionServiceTest {
     }
 
     @Test
-    fun `markReviewed should throw IllegalStateException when decision not found`() = runBlocking {
+    fun `markReviewed should throw NotFoundException when decision not found`() = runBlocking {
         // Given
         coEvery { decisionRepository.markReviewed(decisionId) } returns false
 
         // When/Then
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<me.pavekovt.exception.NotFoundException> {
             decisionService.markReviewed(decisionId)
         }
         coVerify { decisionRepository.markReviewed(decisionId) }
@@ -243,12 +226,12 @@ class DecisionServiceTest {
     }
 
     @Test
-    fun `archive should throw IllegalStateException when decision not found`() = runBlocking {
+    fun `archive should throw NotFoundException when decision not found`() = runBlocking {
         // Given
         coEvery { decisionRepository.archive(decisionId) } returns false
 
         // When/Then
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<me.pavekovt.exception.NotFoundException> {
             decisionService.archive(decisionId)
         }
         coVerify { decisionRepository.archive(decisionId) }

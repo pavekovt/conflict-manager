@@ -1,31 +1,32 @@
 package me.pavekovt.controller
 
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import me.pavekovt.dto.exchange.*
-import me.pavekovt.service.ConflictService
+import me.pavekovt.facade.ConflictFacade
 import me.pavekovt.utils.getCurrentUserId
 import org.koin.ktor.ext.inject
 import java.util.UUID
 
 fun Route.conflictRouting() {
-    val conflictService by inject<ConflictService>()
+    val conflictFacade by inject<ConflictFacade>()
 
     authenticate("jwt") {
         route("/conflicts") {
             // Create conflict
             post {
                 val userId = call.getCurrentUserId()
-                val conflict = conflictService.create(userId)
-                call.respond(conflict)
+                val conflict = conflictFacade.create(userId)
+                call.respond(HttpStatusCode.Created, conflict)
             }
 
             // Get my conflicts
             get {
                 val userId = call.getCurrentUserId()
-                val conflicts = conflictService.findByUser(userId)
+                val conflicts = conflictFacade.findByUser(userId)
                 call.respond(conflicts)
             }
 
@@ -34,7 +35,7 @@ fun Route.conflictRouting() {
                 val userId = call.getCurrentUserId()
                 val conflictId =
                     UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing conflict ID"))
-                val conflict = conflictService.findById(conflictId, userId)
+                val conflict = conflictFacade.findById(conflictId, userId)
                     ?: throw IllegalStateException("Conflict not found")
                 call.respond(conflict)
             }
@@ -46,7 +47,7 @@ fun Route.conflictRouting() {
                     UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing conflict ID"))
                 val request = call.receive<SubmitResolutionRequest>()
 
-                val conflict = conflictService.submitResolution(conflictId, userId, request.resolutionText)
+                val conflict = conflictFacade.submitResolution(conflictId, userId, request.resolutionText)
                 call.respond(conflict)
             }
 
@@ -55,7 +56,7 @@ fun Route.conflictRouting() {
                 val userId = call.getCurrentUserId()
                 val conflictId =
                     UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing conflict ID"))
-                val summary = conflictService.getSummary(conflictId, userId)
+                val summary = conflictFacade.getSummary(conflictId, userId)
                 call.respond(summary)
             }
 
@@ -65,27 +66,27 @@ fun Route.conflictRouting() {
                 val conflictId =
                     UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing conflict ID"))
 
-                val summary = conflictService.getSummary(conflictId, userId)
-                conflictService.approveSummary(UUID.fromString(summary.id), userId, conflictId)
+                val summary = conflictFacade.getSummary(conflictId, userId)
+                conflictFacade.approveSummary(UUID.fromString(summary.id), userId, conflictId)
 
                 call.respond(mapOf("success" to true))
             }
 
             // Request refinement
-            patch("/{id}/request-refinement") {
+            post("/{id}/request-refinement") {
                 val userId = call.getCurrentUserId()
                 val conflictId =
                     UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing conflict ID"))
-                conflictService.requestRefinement(conflictId, userId)
+                conflictFacade.requestRefinement(conflictId, userId)
                 call.respond(mapOf("success" to true))
             }
 
             // Archive conflict
-            patch("/{id}/archive") {
+            post("/{id}/archive") {
                 val userId = call.getCurrentUserId()
                 val conflictId =
                     UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing conflict ID"))
-                conflictService.archive(conflictId, userId)
+                conflictFacade.archive(conflictId, userId)
                 call.respond(mapOf("success" to true))
             }
         }

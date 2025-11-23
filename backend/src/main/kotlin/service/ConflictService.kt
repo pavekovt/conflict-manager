@@ -1,7 +1,5 @@
 package me.pavekovt.service
 
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import me.pavekovt.ai.AIProvider
 import me.pavekovt.dto.AISummaryDTO
 import me.pavekovt.dto.ConflictDTO
@@ -9,31 +7,24 @@ import me.pavekovt.entity.ConflictStatus
 import me.pavekovt.repository.*
 import java.util.UUID
 
+/**
+ * Simple service for conflict data operations.
+ * Business logic and validation should be in ConflictFacade.
+ */
 class ConflictService(
     private val conflictRepository: ConflictRepository,
     private val resolutionRepository: ResolutionRepository,
     private val aiSummaryRepository: AISummaryRepository,
     private val decisionRepository: DecisionRepository,
-    private val aiProvider: AIProvider,
-    private val partnershipService: PartnershipService
+    private val aiProvider: AIProvider
 ) {
 
     suspend fun create(userId: UUID): ConflictDTO {
-        // Verify user has an active partnership
-        partnershipService.requirePartnership(userId)
         return conflictRepository.create(userId)
     }
 
-    suspend fun findById(conflictId: UUID, userId: UUID): ConflictDTO? {
-        val conflict = conflictRepository.findById(conflictId) ?: return null
-
-        // Verify user has access to this conflict (must be partner with initiator)
-        val initiatorId = UUID.fromString(conflict.initiatedBy)
-        val partnerId = partnershipService.getPartnerId(userId)
-
-        val isInvolved = (userId == initiatorId || partnerId == initiatorId)
-
-        return if (isInvolved) conflict else null
+    suspend fun findById(conflictId: UUID): ConflictDTO? {
+        return conflictRepository.findById(conflictId)
     }
 
     suspend fun findByUser(userId: UUID): List<ConflictDTO> {
@@ -45,12 +36,6 @@ class ConflictService(
         userId: UUID,
         resolutionText: String
     ): ConflictDTO {
-        require(resolutionText.isNotBlank()) { "Resolution text cannot be blank" }
-
-        // Verify user has access to this conflict
-        val conflict = findById(conflictId, userId)
-            ?: throw IllegalStateException("Conflict not found or you don't have permission")
-
         // Check if user already submitted
         if (resolutionRepository.hasResolution(conflictId, userId)) {
             throw IllegalStateException("You have already submitted a resolution for this conflict")
@@ -81,14 +66,6 @@ class ConflictService(
     }
 
     suspend fun getSummary(conflictId: UUID, userId: UUID): AISummaryDTO {
-        // Check if user is involved in conflict
-        val conflict = findById(conflictId, userId)
-            ?: throw IllegalStateException("Conflict not found or you don't have permission")
-
-        if (conflict.status !in listOf(ConflictStatus.SUMMARY_GENERATED, ConflictStatus.REFINEMENT, ConflictStatus.APPROVED)) {
-            throw IllegalStateException("Summary not yet generated - both partners must submit resolutions first")
-        }
-
         // Get both users involved in the conflict
         val resolutions = resolutionRepository.findByConflict(conflictId)
         val allUserIds = resolutions.map { UUID.fromString(it.userId) }
@@ -126,19 +103,11 @@ class ConflictService(
         }
     }
 
-    suspend fun requestRefinement(conflictId: UUID, userId: UUID) {
-        // Check if user is involved
-        findById(conflictId, userId)
-            ?: throw IllegalStateException("Conflict not found or you don't have permission")
-
+    suspend fun requestRefinement(conflictId: UUID) {
         conflictRepository.updateStatus(conflictId, ConflictStatus.REFINEMENT)
     }
 
-    suspend fun archive(conflictId: UUID, userId: UUID) {
-        // Check if user is involved
-        findById(conflictId, userId)
-            ?: throw IllegalStateException("Conflict not found or you don't have permission")
-
+    suspend fun archive(conflictId: UUID) {
         conflictRepository.updateStatus(conflictId, ConflictStatus.ARCHIVED)
     }
 }

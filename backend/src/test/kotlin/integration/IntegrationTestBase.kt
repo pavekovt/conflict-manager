@@ -11,6 +11,7 @@ import io.ktor.server.netty.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import me.pavekovt.module
+import org.junit.jupiter.api.AfterEach
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import kotlin.test.AfterTest
@@ -40,6 +41,7 @@ abstract class IntegrationTestBase {
 
     protected lateinit var client: HttpClient
     protected lateinit var server: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>
+    protected lateinit var utils: TestSdkUtils
     protected var baseUrl: String = ""
 
     @BeforeTest
@@ -75,6 +77,7 @@ abstract class IntegrationTestBase {
                 })
             }
         }
+        utils = TestSdkUtils(baseUrl, client)
     }
 
     @AfterTest

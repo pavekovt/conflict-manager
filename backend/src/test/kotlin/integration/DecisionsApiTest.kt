@@ -7,8 +7,10 @@ import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import me.pavekovt.dto.ConflictDTO
 import me.pavekovt.dto.exchange.AuthResponse
 import me.pavekovt.dto.exchange.RegisterRequest
+import me.pavekovt.dto.exchange.SubmitResolutionRequest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -42,7 +44,7 @@ class DecisionsApiTest : IntegrationTestBase() {
         val createResponse = client.post("$baseUrl/api/conflicts") {
             header(HttpHeaders.Authorization, "Bearer $user1Token")
         }
-        val conflict = createResponse.body<ConflictResponse>()
+        val conflict = createResponse.body<ConflictDTO>()
 
         // Both users submit resolutions
         assertEquals(HttpStatusCode.OK, client.post("$baseUrl/api/conflicts/${conflict.id}/resolutions") {

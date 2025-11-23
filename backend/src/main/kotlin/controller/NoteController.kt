@@ -6,13 +6,13 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import me.pavekovt.dto.exchange.*
 import me.pavekovt.exception.NotFoundException
-import me.pavekovt.service.NoteService
+import me.pavekovt.facade.NoteFacade
 import me.pavekovt.utils.getCurrentUserId
 import org.koin.ktor.ext.inject
 import java.util.UUID
 
 fun Route.noteRouting() {
-    val noteService by inject<NoteService>()
+    val noteFacade by inject<NoteFacade>()
 
     authenticate("jwt") {
         route("/notes") {
@@ -20,7 +20,7 @@ fun Route.noteRouting() {
             post {
                 val userId = call.getCurrentUserId()
                 val request = call.receive<CreateNoteRequest>()
-                val note = noteService.create(userId, request.content, request.mood)
+                val note = noteFacade.create(request, userId)
                 call.respond(note)
             }
 
@@ -28,7 +28,7 @@ fun Route.noteRouting() {
             get {
                 val userId = call.getCurrentUserId()
                 val status = call.request.queryParameters["status"]
-                val notes = noteService.findByUser(userId, status)
+                val notes = noteFacade.findAll(status, userId)
                 call.respond(notes)
             }
 
@@ -36,8 +36,7 @@ fun Route.noteRouting() {
             get("/{id}") {
                 val userId = call.getCurrentUserId()
                 val noteId = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing note ID"))
-                val note = noteService.findById(noteId, userId)
-                    ?: throw NotFoundException()
+                val note = noteFacade.findById(noteId, userId)
                 call.respond(note)
             }
 
@@ -47,7 +46,7 @@ fun Route.noteRouting() {
                 val noteId = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing note ID"))
                 val request = call.receive<UpdateNoteRequest>()
 
-                val note = noteService.update(noteId, userId, request.content, request.status, request.mood)
+                val note = noteFacade.update(noteId, request, userId)
                 call.respond(note)
             }
 
@@ -55,13 +54,8 @@ fun Route.noteRouting() {
             delete("/{id}") {
                 val userId = call.getCurrentUserId()
                 val noteId = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing note ID"))
-                val deleted = noteService.delete(noteId, userId)
-
-                if (deleted) {
-                    call.respond(mapOf("success" to true))
-                } else {
-                    throw IllegalStateException("Failed to delete note")
-                }
+                noteFacade.delete(noteId, userId)
+                call.respond(mapOf("success" to true))
             }
         }
     }

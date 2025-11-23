@@ -6,14 +6,14 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import me.pavekovt.dto.exchange.*
-import me.pavekovt.service.DecisionService
+import me.pavekovt.facade.DecisionFacade
 import me.pavekovt.repository.UserRepository
 import me.pavekovt.utils.getCurrentUserId
 import org.koin.ktor.ext.inject
 import java.util.UUID
 
 fun Route.decisionRouting() {
-    val decisionService by inject<DecisionService>()
+    val decisionFacade by inject<DecisionFacade>()
     val userRepository by inject<UserRepository>()
 
     authenticate("jwt") {
@@ -22,7 +22,7 @@ fun Route.decisionRouting() {
             get {
                 val userId = call.getCurrentUserId()
                 val status = call.request.queryParameters["status"]
-                val decisions = decisionService.findAll(status, userId)
+                val decisions = decisionFacade.findAll(status, userId)
                 call.respond(decisions)
             }
 
@@ -31,7 +31,7 @@ fun Route.decisionRouting() {
                 val userId = call.getCurrentUserId()
                 val decisionId =
                     UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing decision ID"))
-                val decision = decisionService.findById(decisionId, userId)
+                val decision = decisionFacade.findById(decisionId, userId)
                 call.respond(decision)
             }
 
@@ -40,7 +40,7 @@ fun Route.decisionRouting() {
                 val userId = call.getCurrentUserId()
                 val decisionId =
                     UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing decision ID"))
-                val decision = decisionService.markReviewed(decisionId, userId)
+                val decision = decisionFacade.markReviewed(decisionId, userId)
                 call.respond(decision)
             }
 
@@ -49,7 +49,7 @@ fun Route.decisionRouting() {
                 val userId = call.getCurrentUserId()
                 val decisionId =
                     UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing decision ID"))
-                val decision = decisionService.archive(decisionId, userId)
+                val decision = decisionFacade.archive(decisionId, userId)
                 call.respond(decision)
             }
 
@@ -57,7 +57,7 @@ fun Route.decisionRouting() {
             post {
                 val userId = call.getCurrentUserId()
                 val request = call.receive<CreateDecisionRequest>()
-                val decision = decisionService.create(request.summary, request.category, userId)
+                val decision = decisionFacade.create(request.summary, request.category, userId)
                 call.respond(decision)
             }
         }

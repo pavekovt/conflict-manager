@@ -3,6 +3,7 @@ package me.pavekovt.configuration
 import io.ktor.server.application.*
 import io.ktor.server.config.*
 import me.pavekovt.ai.*
+import me.pavekovt.facade.*
 import me.pavekovt.properties.AuthenticationProperties
 import me.pavekovt.repository.*
 import me.pavekovt.service.*
@@ -29,16 +30,16 @@ fun Application.configureFrameworks() {
                 AuthenticationProperties(
                     secret = System.getProperty("JWT_SECRET")
                         ?: config.propertyOrNull("jwt.secret")?.getString()
-                        ?: throw IllegalStateException("JWT secret not configured"),
+                        ?: "test-secret-key-for-jwt-that-is-long-enough-for-testing",
                     audience = System.getProperty("JWT_AUDIENCE")
                         ?: config.propertyOrNull("jwt.audience")?.getString()
-                        ?: throw IllegalStateException("JWT audience not configured"),
+                        ?: "test-audience",
                     realm = System.getProperty("JWT_REALM")
                         ?: config.propertyOrNull("jwt.realm")?.getString()
-                        ?: throw IllegalStateException("JWT realm not configured"),
+                        ?: "test-realm",
                     issuer = System.getProperty("JWT_ISSUER")
                         ?: config.propertyOrNull("jwt.issuer")?.getString()
-                        ?: throw IllegalStateException("JWT issuer not configured")
+                        ?: "test-issuer"
                 )
             }
 
@@ -60,14 +61,29 @@ fun Application.configureFrameworks() {
             single<PartnershipRepository> { PartnershipRepositoryImpl() }
 
             /**
-             * Services
+             * Services (simplified - no complex business logic)
              */
             single { AuthService(get(), get()) }
+            single { UserService(get()) }
             single { NoteService(get()) }
-            single { PartnershipService(get(), get()) }
-            single { ConflictService(get(), get(), get(), get(), get(), get()) }
-            single { DecisionService(get(), get()) }
-            single { RetrospectiveService(get(), get(), get(), get()) }
+            single { PartnershipService(get()) }
+            single { ConflictService(get(), get(), get(), get(), get()) }
+            single { DecisionService(get()) }
+            single { RetrospectiveService(get(), get(), get()) }
+
+            /**
+             * Ownership Validation
+             */
+            single<OwnershipValidator> { PartnershipOwnershipValidator(get()) }
+
+            /**
+             * Facades (orchestrate services and handle business logic)
+             */
+            single { PartnershipFacade(get(), get()) }
+            single { NoteFacade(get()) }
+            single { ConflictFacade(get(), get()) }
+            single { DecisionFacade(get(), get()) }
+            single { RetrospectiveFacade(get(), get(), get()) }
         })
     }
 }

@@ -5,13 +5,13 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import me.pavekovt.dto.exchange.*
-import me.pavekovt.service.RetrospectiveService
+import me.pavekovt.facade.RetrospectiveFacade
 import me.pavekovt.utils.getCurrentUserId
 import org.koin.ktor.ext.inject
 import java.util.UUID
 
 fun Route.retrospectiveRouting() {
-    val retroService by inject<RetrospectiveService>()
+    val retroFacade by inject<RetrospectiveFacade>()
 
     authenticate("jwt") {
         route("/retrospectives") {
@@ -21,14 +21,14 @@ fun Route.retrospectiveRouting() {
                 val request = call.receive<CreateRetrospectiveRequest>()
 
                 // Partnership is automatically handled in service (creates for both partners)
-                val retro = retroService.create(request.scheduledDate, currentUserId)
+                val retro = retroFacade.create(request.scheduledDate, currentUserId)
                 call.respond(retro)
             }
 
             // Get my retrospectives (only ones where I'm a participant)
             get {
                 val userId = call.getCurrentUserId()
-                val retros = retroService.findAll(userId)
+                val retros = retroFacade.findAll(userId)
                 call.respond(retros)
             }
 
@@ -37,7 +37,7 @@ fun Route.retrospectiveRouting() {
                 val userId = call.getCurrentUserId()
                 val retroId =
                     UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing retrospective ID"))
-                val retro = retroService.findById(retroId, userId)
+                val retro = retroFacade.findById(retroId, userId)
                 call.respond(retro)
             }
 
@@ -45,7 +45,7 @@ fun Route.retrospectiveRouting() {
             get("/{id}/notes") {
                 val userId = call.getCurrentUserId()
                 val retroId = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing retrospective ID"))
-                val retro = retroService.findByIdWithNotes(retroId, userId)
+                val retro = retroFacade.findByIdWithNotes(retroId, userId)
                 call.respond(retro)
             }
 
@@ -56,33 +56,36 @@ fun Route.retrospectiveRouting() {
                     UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing retrospective ID"))
                 val request = call.receive<AddNoteToRetroRequest>()
 
-                retroService.addNote(retroId, UUID.fromString(request.noteId), userId)
+                retroFacade.addNote(retroId, UUID.fromString(request.noteId), userId)
                 call.respond(mapOf("success" to true))
             }
 
             // Generate AI discussion points
             post("/{id}/generate-points") {
+                val userId = call.getCurrentUserId()
                 val retroId =
                     UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing retrospective ID"))
-                retroService.generateDiscussionPoints(retroId)
+                retroFacade.generateDiscussionPoints(retroId, userId)
                 call.respond(mapOf("success" to true))
             }
 
             // Complete retrospective
             post("/{id}/complete") {
+                val userId = call.getCurrentUserId()
                 val retroId =
                     UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing retrospective ID"))
                 val request = call.receive<CompleteRetrospectiveRequest>()
 
-                retroService.complete(retroId, request.finalSummary)
+                retroFacade.complete(retroId, request.finalSummary, userId)
                 call.respond(mapOf("success" to true))
             }
 
             // Cancel retrospective
             patch("/{id}/cancel") {
+                val userId = call.getCurrentUserId()
                 val retroId =
                     UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing retrospective ID"))
-                retroService.cancel(retroId)
+                retroFacade.cancel(retroId, userId)
                 call.respond(mapOf("success" to true))
             }
         }

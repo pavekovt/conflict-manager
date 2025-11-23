@@ -12,18 +12,18 @@ import me.pavekovt.repository.RetrospectiveRepository
 import java.util.UUID
 import kotlinx.datetime.LocalDateTime
 
+/**
+ * Simple service for retrospective data operations.
+ * Business logic and validation should be in RetrospectiveFacade.
+ */
 class RetrospectiveService(
     private val retrospectiveRepository: RetrospectiveRepository,
     private val noteRepository: NoteRepository,
-    private val aiProvider: AIProvider,
-    private val partnershipService: PartnershipService
+    private val aiProvider: AIProvider
 ) {
 
-    suspend fun create(scheduledDate: String?, currentUserId: UUID): RetrospectiveDTO {
+    suspend fun create(scheduledDate: String?, userIds: List<UUID>): RetrospectiveDTO {
         val scheduledDateTime = scheduledDate?.let { LocalDateTime.parse(it) }
-
-        // Verify user has an active partnership
-        val partnerId = partnershipService.requirePartnership(currentUserId)
 
         val status = if (scheduledDateTime != null) {
             RetroStatus.SCHEDULED
@@ -31,58 +31,28 @@ class RetrospectiveService(
             RetroStatus.IN_PROGRESS
         }
 
-        // Create retrospective for both partners
-        val userIds = listOf(currentUserId, partnerId)
         return retrospectiveRepository.create(scheduledDateTime, status, userIds)
-    }
-
-    suspend fun findAll(currentUserId: UUID): List<RetrospectiveDTO> {
-        // Only show retrospectives for this user's partnership
-        return retrospectiveRepository.findByUser(currentUserId)
     }
 
     suspend fun findByUser(userId: UUID): List<RetrospectiveDTO> {
         return retrospectiveRepository.findByUser(userId)
     }
 
-    suspend fun findById(id: UUID, userId: UUID): RetrospectiveDTO {
-        val retro = retrospectiveRepository.findById(id)
+    suspend fun findById(id: UUID): RetrospectiveDTO {
+        return retrospectiveRepository.findById(id)
             ?: throw IllegalStateException("Retrospective not found")
-
-        // Check if user has access
-        if (!retrospectiveRepository.userHasAccessToRetro(id, userId)) {
-            throw IllegalStateException("You don't have access to this retrospective")
-        }
-
-        return retro
     }
 
-    suspend fun findByIdWithNotes(id: UUID, userId: UUID): RetrospectiveWithNotesDTO {
-        val retro = retrospectiveRepository.findByIdWithNotes(id)
+    suspend fun findByIdWithNotes(id: UUID): RetrospectiveWithNotesDTO {
+        return retrospectiveRepository.findByIdWithNotes(id)
             ?: throw IllegalStateException("Retrospective not found")
-
-        // Check if user has access
-        if (!retrospectiveRepository.userHasAccessToRetro(id, userId)) {
-            throw IllegalStateException("You don't have access to this retrospective")
-        }
-
-        return retro
     }
 
-    suspend fun addNote(retroId: UUID, noteId: UUID, userId: UUID) {
-        // Verify note belongs to user
-        val note = noteRepository.findById(noteId)
-            ?: throw IllegalStateException("Note not found")
+    suspend fun userHasAccess(retroId: UUID, userId: UUID): Boolean {
+        return retrospectiveRepository.userHasAccessToRetro(retroId, userId)
+    }
 
-        if (note.userId != userId.toString()) {
-            throw IllegalStateException("You can only add your own notes to retrospective")
-        }
-
-        // Verify note is ready for discussion
-        if (note.status != NoteStatus.READY_FOR_DISCUSSION.name.lowercase()) {
-            throw IllegalStateException("Note must be marked as 'ready_for_discussion' before adding to retrospective")
-        }
-
+    suspend fun addNote(retroId: UUID, noteId: UUID) {
         retrospectiveRepository.addNote(retroId, noteId)
     }
 
@@ -104,8 +74,6 @@ class RetrospectiveService(
     }
 
     suspend fun complete(retroId: UUID, finalSummary: String) {
-        require(finalSummary.isNotBlank()) { "Final summary cannot be blank" }
-
         val success = retrospectiveRepository.complete(retroId, finalSummary)
         if (!success) {
             throw IllegalStateException("Retrospective not found")

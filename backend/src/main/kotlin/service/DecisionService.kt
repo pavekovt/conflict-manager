@@ -6,55 +6,41 @@ import me.pavekovt.exception.NotFoundException
 import me.pavekovt.repository.DecisionRepository
 import java.util.UUID
 
+/**
+ * Simple service for decision data operations.
+ * Business logic and validation should be in DecisionFacade.
+ */
 class DecisionService(
-    private val decisionRepository: DecisionRepository,
-    private val partnershipService: PartnershipService
+    private val decisionRepository: DecisionRepository
 ) {
 
-    suspend fun create(summary: String, category: String?, userId: UUID): DecisionDTO {
-        require(summary.isNotBlank()) { "Decision summary cannot be blank" }
-
-        // Verify user has an active partnership
-        partnershipService.requirePartnership(userId)
-
+    suspend fun create(summary: String, category: String?): DecisionDTO {
         return decisionRepository.create(null, summary, category)
     }
 
-    suspend fun findAll(status: String?, userId: UUID): List<DecisionDTO> {
+    suspend fun findAll(status: DecisionStatus?): List<DecisionDTO> {
+        return decisionRepository.findAll(status)
+    }
+
+    suspend fun findByUserAndPartner(userId: UUID, partnerId: UUID, status: String?): List<DecisionDTO> {
         val statusEnum = status?.let {
             runCatching { DecisionStatus.valueOf(it.uppercase()) }
                 .getOrElse { throw IllegalArgumentException("Invalid status: $status") }
         }
 
-        // Get user's partner
-        val partnerId = partnershipService.getPartnerId(userId)
-
-        // Return decisions for this partnership only
         return decisionRepository.findByUserAndPartner(userId, partnerId, statusEnum)
     }
 
-    suspend fun findById(id: UUID, userId: UUID): DecisionDTO {
-        val partnerId = partnershipService.getPartnerId(userId)
-
-        // Verify user has access to this decision
-        val hasAccess = decisionRepository.isAccessibleByUser(id, userId, partnerId)
-        if (!hasAccess) {
-            throw NotFoundException()
-        }
-
+    suspend fun findById(id: UUID): DecisionDTO {
         return decisionRepository.findById(id)
             ?: throw NotFoundException()
     }
 
-    suspend fun markReviewed(id: UUID, userId: UUID): DecisionDTO {
-        val partnerId = partnershipService.getPartnerId(userId)
+    suspend fun isAccessibleByUser(decisionId: UUID, userId: UUID, partnerId: UUID): Boolean {
+        return decisionRepository.isAccessibleByUser(decisionId, userId, partnerId)
+    }
 
-        // Verify user has access to this decision
-        val hasAccess = decisionRepository.isAccessibleByUser(id, userId, partnerId)
-        if (!hasAccess) {
-            throw NotFoundException()
-        }
-
+    suspend fun markReviewed(id: UUID): DecisionDTO {
         val success = decisionRepository.markReviewed(id)
         if (!success) {
             throw NotFoundException()
@@ -64,15 +50,7 @@ class DecisionService(
             ?: throw NotFoundException()
     }
 
-    suspend fun archive(id: UUID, userId: UUID): DecisionDTO {
-        val partnerId = partnershipService.getPartnerId(userId)
-
-        // Verify user has access to this decision
-        val hasAccess = decisionRepository.isAccessibleByUser(id, userId, partnerId)
-        if (!hasAccess) {
-            throw NotFoundException()
-        }
-
+    suspend fun archive(id: UUID): DecisionDTO {
         val success = decisionRepository.archive(id)
         if (!success) {
             throw NotFoundException()

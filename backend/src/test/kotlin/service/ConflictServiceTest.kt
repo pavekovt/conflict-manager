@@ -54,7 +54,7 @@ class ConflictServiceTest {
         val expectedConflict = ConflictDTO(
             id = conflictId.toString(),
             initiatedBy = userId.toString(),
-            status = "open",
+            status = ConflictStatus.PENDING_RESOLUTIONS,
             createdAt = "2024-01-01T00:00:00",
             myResolutionSubmitted = false,
             partnerResolutionSubmitted = false,
@@ -77,7 +77,7 @@ class ConflictServiceTest {
         val conflict = ConflictDTO(
             id = conflictId.toString(),
             initiatedBy = userId.toString(),
-            status = "open",
+            status = ConflictStatus.PENDING_RESOLUTIONS,
             createdAt = "2024-01-01T00:00:00",
             myResolutionSubmitted = false,
             partnerResolutionSubmitted = false,
@@ -85,10 +85,9 @@ class ConflictServiceTest {
         )
 
         coEvery { conflictRepository.findById(conflictId) } returns conflict
-        coEvery { resolutionRepository.hasResolution(conflictId, userId) } returns false
 
         // When
-        val result = conflictService.findById(conflictId, userId)
+        val result = conflictService.findById(conflictId)
 
         // Then
         assertEquals(conflict, result)
@@ -96,12 +95,12 @@ class ConflictServiceTest {
     }
 
     @Test
-    fun `findById should return conflict when user has submitted resolution`() = runBlocking {
+    fun `findById should return conflict when found`() = runBlocking {
         // Given
         val conflict = ConflictDTO(
             id = conflictId.toString(),
             initiatedBy = partnerId.toString(),
-            status = "open",
+            status = ConflictStatus.PENDING_RESOLUTIONS,
             createdAt = "2024-01-01T00:00:00",
             myResolutionSubmitted = false,
             partnerResolutionSubmitted = false,
@@ -109,40 +108,26 @@ class ConflictServiceTest {
         )
 
         coEvery { conflictRepository.findById(conflictId) } returns conflict
-        coEvery { resolutionRepository.hasResolution(conflictId, userId) } returns true
 
         // When
-        val result = conflictService.findById(conflictId, userId)
+        val result = conflictService.findById(conflictId)
 
         // Then
         assertEquals(conflict, result)
         coVerify { conflictRepository.findById(conflictId) }
-        coVerify { resolutionRepository.hasResolution(conflictId, userId) }
     }
 
     @Test
-    fun `findById should return null when user is not involved`() = runBlocking {
+    fun `findById should return null when conflict not found`() = runBlocking {
         // Given
-        val conflict = ConflictDTO(
-            id = conflictId.toString(),
-            initiatedBy = partnerId.toString(),
-            status = "open",
-            createdAt = "2024-01-01T00:00:00",
-            myResolutionSubmitted = false,
-            partnerResolutionSubmitted = false,
-            summaryAvailable = false
-        )
-
-        coEvery { conflictRepository.findById(conflictId) } returns conflict
-        coEvery { resolutionRepository.hasResolution(conflictId, userId) } returns false
+        coEvery { conflictRepository.findById(conflictId) } returns null
 
         // When
-        val result = conflictService.findById(conflictId, userId)
+        val result = conflictService.findById(conflictId)
 
         // Then
         assertNull(result)
         coVerify { conflictRepository.findById(conflictId) }
-        coVerify { resolutionRepository.hasResolution(conflictId, userId) }
     }
 
     @Test
@@ -152,7 +137,7 @@ class ConflictServiceTest {
             ConflictDTO(
                 id = conflictId.toString(),
                 initiatedBy = userId.toString(),
-                status = "open",
+                status = ConflictStatus.PENDING_RESOLUTIONS,
                 createdAt = "2024-01-01T00:00:00",
                 myResolutionSubmitted = false,
                 partnerResolutionSubmitted = false,
@@ -170,14 +155,6 @@ class ConflictServiceTest {
         coVerify { conflictRepository.findByUser(userId) }
     }
 
-    @Test
-    fun `submitResolution should throw when resolution text is blank`() = runBlocking {
-        // When/Then
-        assertFailsWith<IllegalArgumentException> {
-            conflictService.submitResolution(conflictId, userId, "   ")
-        }
-        coVerify(exactly = 0) { resolutionRepository.create(any(), any(), any()) }
-    }
 
     @Test
     fun `submitResolution should throw when user already submitted`() = runBlocking {
@@ -199,7 +176,7 @@ class ConflictServiceTest {
         val conflict = ConflictDTO(
             id = conflictId.toString(),
             initiatedBy = userId.toString(),
-            status = "open",
+            status = ConflictStatus.PENDING_RESOLUTIONS,
             createdAt = "2024-01-01T00:00:00",
             myResolutionSubmitted = true,
             partnerResolutionSubmitted = false,
@@ -249,7 +226,7 @@ class ConflictServiceTest {
         val updatedConflict = ConflictDTO(
             id = conflictId.toString(),
             initiatedBy = userId.toString(),
-            status = "summary_generated",
+            status = ConflictStatus.SUMMARY_GENERATED,
             createdAt = "2024-01-01T00:00:00",
             myResolutionSubmitted = true,
             partnerResolutionSubmitted = true,
@@ -277,74 +254,28 @@ class ConflictServiceTest {
     }
 
     @Test
-    fun `requestRefinement should update status when user has permission`() = runBlocking {
+    fun `requestRefinement should update status successfully`() = runBlocking {
         // Given
-        val conflict = ConflictDTO(
-            id = conflictId.toString(),
-            initiatedBy = userId.toString(),
-            status = "summary_generated",
-            createdAt = "2024-01-01T00:00:00",
-            myResolutionSubmitted = true,
-            partnerResolutionSubmitted = true,
-            summaryAvailable = true
-        )
-
-        coEvery { conflictRepository.findById(conflictId) } returns conflict
-        coEvery { resolutionRepository.hasResolution(conflictId, userId) } returns false
         coEvery { conflictRepository.updateStatus(conflictId, ConflictStatus.REFINEMENT) } returns true
 
         // When
-        conflictService.requestRefinement(conflictId, userId)
+        conflictService.requestRefinement(conflictId)
 
         // Then
         coVerify { conflictRepository.updateStatus(conflictId, ConflictStatus.REFINEMENT) }
     }
 
-    @Test
-    fun `requestRefinement should throw when user does not have permission`() = runBlocking {
-        // Given
-        coEvery { conflictRepository.findById(conflictId) } returns null
-
-        // When/Then
-        assertFailsWith<IllegalStateException> {
-            conflictService.requestRefinement(conflictId, userId)
-        }
-        coVerify(exactly = 0) { conflictRepository.updateStatus(any(), any()) }
-    }
 
     @Test
-    fun `archive should update status when user has permission`() = runBlocking {
+    fun `archive should update status successfully`() = runBlocking {
         // Given
-        val conflict = ConflictDTO(
-            id = conflictId.toString(),
-            initiatedBy = userId.toString(),
-            status = "open",
-            createdAt = "2024-01-01T00:00:00",
-            myResolutionSubmitted = false,
-            partnerResolutionSubmitted = false,
-            summaryAvailable = false
-        )
-
-        coEvery { conflictRepository.findById(conflictId) } returns conflict
-        coEvery { resolutionRepository.hasResolution(conflictId, userId) } returns false
         coEvery { conflictRepository.updateStatus(conflictId, ConflictStatus.ARCHIVED) } returns true
 
         // When
-        conflictService.archive(conflictId, userId)
+        conflictService.archive(conflictId)
 
         // Then
         coVerify { conflictRepository.updateStatus(conflictId, ConflictStatus.ARCHIVED) }
     }
 
-    @Test
-    fun `archive should throw when user does not have permission`() = runBlocking {
-        // Given
-        coEvery { conflictRepository.findById(conflictId) } returns null
-
-        // When/Then
-        assertFailsWith<IllegalStateException> {
-            conflictService.archive(conflictId, userId)
-        }
-        coVerify(exactly = 0) { conflictRepository.updateStatus(any(), any()) }
-    }
 }

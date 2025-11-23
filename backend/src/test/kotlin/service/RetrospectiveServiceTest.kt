@@ -126,7 +126,7 @@ class RetrospectiveServiceTest {
     }
 
     @Test
-    fun `findById should return retrospective when user has access`() = runBlocking {
+    fun `findById should return retrospective when found`() = runBlocking {
         // Given
         val retro = RetrospectiveDTO(
             id = retroId.toString(),
@@ -140,121 +140,63 @@ class RetrospectiveServiceTest {
         )
 
         coEvery { retrospectiveRepository.findById(retroId) } returns retro
-        coEvery { retrospectiveRepository.userHasAccessToRetro(retroId, userId) } returns true
 
         // When
-        val result = retrospectiveService.findById(retroId, userId)
+        val result = retrospectiveService.findById(retroId)
 
         // Then
         assertEquals(retro, result)
         coVerify { retrospectiveRepository.findById(retroId) }
-        coVerify { retrospectiveRepository.userHasAccessToRetro(retroId, userId) }
     }
 
     @Test
-    fun `findById should throw when user does not have access`() = runBlocking {
+    fun `findById should throw when retrospective not found`() = runBlocking {
         // Given
-        val retro = RetrospectiveDTO(
-            id = retroId.toString(),
-            scheduledDate = null,
-            startedAt = "2024-01-01T00:00:00",
-            completedAt = null,
-            status = "in_progress",
-            aiDiscussionPoints = null,
-            finalSummary = null,
-            createdAt = "2024-01-01T00:00:00"
-        )
-
-        coEvery { retrospectiveRepository.findById(retroId) } returns retro
-        coEvery { retrospectiveRepository.userHasAccessToRetro(retroId, userId) } returns false
+        coEvery { retrospectiveRepository.findById(retroId) } returns null
 
         // When/Then
         assertFailsWith<IllegalStateException> {
-            retrospectiveService.findById(retroId, userId)
+            retrospectiveService.findById(retroId)
         }
         coVerify { retrospectiveRepository.findById(retroId) }
+    }
+
+    @Test
+    fun `userHasAccess should return true when user has access`() = runBlocking {
+        // Given
+        coEvery { retrospectiveRepository.userHasAccessToRetro(retroId, userId) } returns true
+
+        // When
+        val result = retrospectiveService.userHasAccess(retroId, userId)
+
+        // Then
+        assertTrue(result)
         coVerify { retrospectiveRepository.userHasAccessToRetro(retroId, userId) }
     }
 
     @Test
-    fun `addNote should add note when user owns it and note is ready`() = runBlocking {
+    fun `userHasAccess should return false when user does not have access`() = runBlocking {
         // Given
-        val note = NoteDTO(
-            id = noteId.toString(),
-            userId = userId.toString(),
-            content = "Test note",
-            status = "ready_for_discussion",
-            mood = null,
-            createdAt = "2024-01-01T00:00:00"
-        )
+        coEvery { retrospectiveRepository.userHasAccessToRetro(retroId, userId) } returns false
 
-        coEvery { noteRepository.findById(noteId) } returns note
+        // When
+        val result = retrospectiveService.userHasAccess(retroId, userId)
+
+        // Then
+        assertFalse(result)
+        coVerify { retrospectiveRepository.userHasAccessToRetro(retroId, userId) }
+    }
+
+    @Test
+    fun `addNote should add note successfully`() = runBlocking {
+        // Given
         coEvery { retrospectiveRepository.addNote(retroId, noteId) } returns true
 
         // When
-        retrospectiveService.addNote(retroId, noteId, userId)
+        retrospectiveService.addNote(retroId, noteId)
 
         // Then
-        coVerify { noteRepository.findById(noteId) }
         coVerify { retrospectiveRepository.addNote(retroId, noteId) }
-    }
-
-    @Test
-    fun `addNote should throw when note not found`() = runBlocking {
-        // Given
-        coEvery { noteRepository.findById(noteId) } returns null
-
-        // When/Then
-        assertFailsWith<IllegalStateException> {
-            retrospectiveService.addNote(retroId, noteId, userId)
-        }
-        coVerify { noteRepository.findById(noteId) }
-        coVerify(exactly = 0) { retrospectiveRepository.addNote(any(), any()) }
-    }
-
-    @Test
-    fun `addNote should throw when user does not own note`() = runBlocking {
-        // Given
-        val differentUserId = UUID.randomUUID()
-        val note = NoteDTO(
-            id = noteId.toString(),
-            userId = differentUserId.toString(),
-            content = "Test note",
-            status = "ready_for_discussion",
-            mood = null,
-            createdAt = "2024-01-01T00:00:00"
-        )
-
-        coEvery { noteRepository.findById(noteId) } returns note
-
-        // When/Then
-        assertFailsWith<IllegalStateException> {
-            retrospectiveService.addNote(retroId, noteId, userId)
-        }
-        coVerify { noteRepository.findById(noteId) }
-        coVerify(exactly = 0) { retrospectiveRepository.addNote(any(), any()) }
-    }
-
-    @Test
-    fun `addNote should throw when note is not ready for discussion`() = runBlocking {
-        // Given
-        val note = NoteDTO(
-            id = noteId.toString(),
-            userId = userId.toString(),
-            content = "Test note",
-            status = "draft",
-            mood = null,
-            createdAt = "2024-01-01T00:00:00"
-        )
-
-        coEvery { noteRepository.findById(noteId) } returns note
-
-        // When/Then
-        assertFailsWith<IllegalStateException> {
-            retrospectiveService.addNote(retroId, noteId, userId)
-        }
-        coVerify { noteRepository.findById(noteId) }
-        coVerify(exactly = 0) { retrospectiveRepository.addNote(any(), any()) }
     }
 
     @Test
