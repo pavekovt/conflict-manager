@@ -1,6 +1,7 @@
 package me.pavekovt.dto
 
 import kotlinx.serialization.Serializable
+import me.pavekovt.entity.ConflictFeelingsStatus
 
 @Serializable
 data class ConflictFeelingsDTO(
@@ -8,8 +9,10 @@ data class ConflictFeelingsDTO(
     val conflictId: String,
     val userId: String,
     val feelingsText: String,
+    val status: ConflictFeelingsStatus,
     val aiGuidance: String?,
     val suggestedResolution: String?,
+    val emotionalTone: String?,
     val submittedAt: String
 )
 

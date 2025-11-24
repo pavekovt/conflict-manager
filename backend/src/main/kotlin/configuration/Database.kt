@@ -40,7 +40,8 @@ fun Application.configureDatabase() {
             Partnerships,
             PartnershipContext,
             RetrospectiveNotes,
-            RetrospectiveUsers
+            RetrospectiveUsers,
+            Jobs
         )
     }
 }

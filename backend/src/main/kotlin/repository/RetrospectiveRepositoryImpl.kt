@@ -133,6 +133,25 @@ class RetrospectiveRepositoryImpl : RetrospectiveRepository {
             it[status] = RetroStatus.CANCELLED
         } > 0
     }
+
+    override suspend fun getNotesForRetrospective(retroId: UUID): List<NoteDTO> = dbQuery {
+        (RetrospectiveNotes innerJoin Notes)
+            .selectAll()
+            .where { RetrospectiveNotes.retrospectiveId eq retroId }
+            .map { it.toNoteDTO() }
+    }
+
+    override suspend fun updateDiscussionPoints(retroId: UUID, discussionPoints: String): Boolean = dbQuery {
+        Retrospectives.update({ Retrospectives.id eq retroId }) {
+            it[aiDiscussionPoints] = discussionPoints
+        } > 0
+    }
+
+    override suspend fun updateStatus(retroId: UUID, status: RetroStatus): Boolean = dbQuery {
+        Retrospectives.update({ Retrospectives.id eq retroId }) {
+            it[Retrospectives.status] = status
+        } > 0
+    }
 }
 
 private fun ResultRow.toRetrospectiveDTO() = RetrospectiveDTO(

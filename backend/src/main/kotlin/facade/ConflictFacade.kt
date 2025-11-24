@@ -20,9 +20,7 @@ class ConflictFacade(
     private val conflictService: ConflictService,
     private val ownershipValidator: OwnershipValidator,
     private val partnershipRepository: PartnershipRepository,
-    private val partnershipContextRepository: PartnershipContextRepository,
-    private val resolutionRepository: ResolutionRepository,
-    private val aiProvider: AIProvider
+    private val partnershipContextRepository: PartnershipContextRepository
 ) {
 
     suspend fun create(userId: UUID): ConflictDTO {
@@ -48,8 +46,8 @@ class ConflictFacade(
 
     /**
      * Submit feelings/frustrations for a conflict.
-     * This is the FIRST step in the new conflict resolution flow.
-     * User expresses their feelings, AI provides guidance and suggests a resolution.
+     * Returns immediately with PROCESSING status. AI processes in background.
+     * Users can submit multiple feelings as they process the conflict.
      */
     suspend fun submitFeelings(
         conflictId: UUID,
@@ -62,9 +60,9 @@ class ConflictFacade(
         val conflict = findById(conflictId, userId)
             ?: throw IllegalStateException("Conflict not found or you don't have permission")
 
-        // Check conflict is in correct status
-        if (conflict.status != ConflictStatus.PENDING_FEELINGS) {
-            throw IllegalStateException("Conflict is not in PENDING_FEELINGS status. Current status: ${conflict.status}")
+        // Check conflict is in correct status (PENDING_FEELINGS or PROCESSING_FEELINGS)
+        if (conflict.status !in listOf(ConflictStatus.PENDING_FEELINGS, ConflictStatus.PROCESSING_FEELINGS)) {
+            throw IllegalStateException("Cannot submit feelings - conflict status is ${conflict.status}")
         }
 
         // Get partnership context for AI
@@ -74,14 +72,14 @@ class ConflictFacade(
             partnershipContextRepository.getContext(partnershipId)?.compactedSummary
         } else null
 
-        // Submit feelings and get AI guidance
+        // Submit feelings - returns immediately, AI processes in background
         return conflictService.submitFeelings(conflictId, userId, feelingsText, partnershipContext)
     }
 
     /**
-     * Get user's feelings for a conflict (to see AI guidance and suggested resolution)
+     * Get ALL feelings from this user for a conflict (users can submit multiple)
      */
-    suspend fun getFeelings(conflictId: UUID, userId: UUID): ConflictFeelingsDTO? {
+    suspend fun getFeelings(conflictId: UUID, userId: UUID): List<ConflictFeelingsDTO> {
         // Verify user has access to this conflict
         findById(conflictId, userId)
             ?: throw IllegalStateException("Conflict not found or you don't have permission")
@@ -89,6 +87,20 @@ class ConflictFacade(
         return conflictService.getFeelings(conflictId, userId)
     }
 
+    /**
+     * Get ALL feelings for a conflict from both users
+     */
+    suspend fun getAllFeelingsForConflict(conflictId: UUID, userId: UUID): List<ConflictFeelingsDTO> {
+        // Verify user has access to this conflict
+        findById(conflictId, userId)
+            ?: throw IllegalStateException("Conflict not found or you don't have permission")
+
+        return conflictService.getAllFeelingsForConflict(conflictId)
+    }
+
+    /**
+     * Submit resolution. Returns immediately if async summary generation needed.
+     */
     suspend fun submitResolution(
         conflictId: UUID,
         userId: UUID,
@@ -100,37 +112,13 @@ class ConflictFacade(
         val conflict = findById(conflictId, userId)
             ?: throw IllegalStateException("Conflict not found or you don't have permission")
 
-        // Get partnership ID for context
-        val partnershipDTO = partnershipRepository.findActivePartnership(userId)
-        val partnershipContext = if (partnershipDTO != null) {
-            val partnershipId = UUID.fromString(partnershipDTO.id)
-            partnershipContextRepository.getContext(partnershipId)?.compactedSummary
-        } else null
-
-        // Submit resolution with context
-        val result = conflictService.submitResolution(conflictId, userId, resolutionText, partnershipContext)
-
-        // Check if both resolutions are now submitted (AI summary was generated)
-        val bothResolutions = resolutionRepository.getBothResolutions(conflictId)
-        if (bothResolutions != null && partnershipDTO != null) {
-            // AI summary was just generated, update partnership context
-            val partnershipId = UUID.fromString(partnershipDTO.id)
-            val existingContext = partnershipContextRepository.getContext(partnershipId)?.compactedSummary
-
-            val updatedContext = aiProvider.updatePartnershipContext(
-                existingContext = existingContext,
-                newConflictSummary = result.status.name, // We'll use the conflict status for now
-                newResolutions = bothResolutions
-            )
-
-            partnershipContextRepository.upsertContext(
-                partnershipId = partnershipId,
-                compactedSummary = updatedContext,
-                incrementConflictCount = true
-            )
+        // Check conflict is in correct status
+        if (conflict.status != ConflictStatus.PENDING_RESOLUTIONS) {
+            throw IllegalStateException("Cannot submit resolution - conflict status is ${conflict.status}")
         }
 
-        return result
+        // Submit resolution - if both are submitted, AI summary generation happens in background
+        return conflictService.submitResolution(conflictId, userId, resolutionText)
     }
 
     suspend fun getSummary(conflictId: UUID, userId: UUID): AISummaryDTO {
@@ -138,8 +126,13 @@ class ConflictFacade(
         val conflict = findById(conflictId, userId)
             ?: throw IllegalStateException("Conflict not found or you don't have permission")
 
-        if (conflict.status !in listOf(ConflictStatus.SUMMARY_GENERATED, ConflictStatus.REFINEMENT, ConflictStatus.APPROVED)) {
-            throw IllegalStateException("Summary not yet generated - both partners must submit resolutions first")
+        if (conflict.status !in listOf(
+                ConflictStatus.SUMMARY_GENERATED,
+                ConflictStatus.REFINEMENT,
+                ConflictStatus.APPROVED
+            )
+        ) {
+            throw IllegalStateException("Summary not yet generated - current status: ${conflict.status}")
         }
 
         return conflictService.getSummary(conflictId, userId)

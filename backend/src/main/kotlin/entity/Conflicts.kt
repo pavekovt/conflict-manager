@@ -12,10 +12,12 @@ object Conflicts : UUIDTable("conflicts") {
 }
 
 enum class ConflictStatus {
-    PENDING_FEELINGS,      // Waiting for both partners to submit their feelings/frustrations
-    PENDING_RESOLUTIONS,   // Both submitted feelings, AI provided guidance, waiting for final resolutions
-    SUMMARY_GENERATED,     // AI created final summary from both resolutions
-    REFINEMENT,            // One or both partners requested changes to summary
-    APPROVED,              // Both partners approved summary, decision created
-    ARCHIVED               // Conflict closed without completion
+    PENDING_FEELINGS,         // Waiting for both partners to submit their feelings/frustrations
+    PROCESSING_FEELINGS,      // AI is processing submitted feelings in background
+    PENDING_RESOLUTIONS,      // Both submitted feelings, AI provided guidance, waiting for final resolutions
+    PROCESSING_SUMMARY,       // AI is generating summary from both resolutions in background
+    SUMMARY_GENERATED,        // AI created final summary from both resolutions
+    REFINEMENT,               // One or both partners requested changes to summary
+    APPROVED,                 // Both partners approved summary, decision created
+    ARCHIVED                  // Conflict closed without completion
 }

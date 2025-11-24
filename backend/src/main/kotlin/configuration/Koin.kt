@@ -116,6 +116,7 @@ fun Application.configureFrameworks() {
             single<RetrospectiveRepository> { RetrospectiveRepositoryImpl() }
             single<PartnershipRepository> { PartnershipRepositoryImpl() }
             single<PartnershipContextRepository> { PartnershipContextRepositoryImpl() }
+            single<JobRepository> { JobRepositoryImpl() }
 
             /**
              * Services (simplified - no complex business logic)
@@ -124,9 +125,15 @@ fun Application.configureFrameworks() {
             single { UserService(get()) }
             single { NoteService(get()) }
             single { PartnershipService(get()) }
-            single { ConflictService(get(), get(), get(), get(), get(), get()) }
+            single { ConflictService(get(), get(), get(), get(), get(), get(), get()) }
             single { DecisionService(get()) }
             single { RetrospectiveService(get(), get(), get()) }
+
+            /**
+             * Background Job Processing (async AI operations)
+             */
+            single { JobProcessorService(get(), get(), get(), get(), get(), get(), get()) }
+
 
             /**
              * Ownership Validation
@@ -138,7 +145,7 @@ fun Application.configureFrameworks() {
              */
             single { PartnershipFacade(get(), get()) }
             single { NoteFacade(get()) }
-            single { ConflictFacade(get(), get(), get(), get(), get(), get()) }
+            single { ConflictFacade(get(), get(), get(), get()) }
             single { DecisionFacade(get(), get()) }
             single { RetrospectiveFacade(get(), get(), get(), get(), get(), get()) }
         })

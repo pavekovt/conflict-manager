@@ -5,33 +5,41 @@ import java.util.UUID
 
 interface ConflictFeelingsRepository {
     /**
-     * Create a new feelings entry for a conflict
+     * Create a new feelings entry for a conflict (without AI response - will be filled by background job)
      */
     suspend fun create(
         conflictId: UUID,
         userId: UUID,
-        feelingsText: String,
-        aiGuidance: String,
-        suggestedResolution: String
+        feelingsText: String
     ): ConflictFeelingsDTO
 
     /**
-     * Find feelings entry by conflict and user
+     * Find feelings entry by ID
      */
-    suspend fun findByConflictAndUser(conflictId: UUID, userId: UUID): ConflictFeelingsDTO?
+    suspend fun findById(feelingId: UUID): ConflictFeelingsDTO?
 
     /**
-     * Check if user has submitted feelings for a conflict
+     * Update feelings entry with AI response after processing
      */
-    suspend fun hasSubmittedFeelings(conflictId: UUID, userId: UUID): Boolean
+    suspend fun updateWithAIResponse(
+        feelingId: UUID,
+        aiGuidance: String,
+        suggestedResolution: String,
+        emotionalTone: String
+    ): ConflictFeelingsDTO?
 
     /**
-     * Get both users' feelings for a conflict (returns list of 0-2 entries)
+     * Find ALL feelings entries by conflict and user (users can submit multiple feelings)
+     */
+    suspend fun findByConflictAndUser(conflictId: UUID, userId: UUID): List<ConflictFeelingsDTO>
+
+    /**
+     * Get all feelings for a conflict (from both users)
      */
     suspend fun findByConflict(conflictId: UUID): List<ConflictFeelingsDTO>
 
     /**
-     * Count how many users have submitted feelings for a conflict
+     * Count how many COMPLETED feelings both users have submitted
      */
-    suspend fun countSubmittedFeelings(conflictId: UUID): Int
+    suspend fun countCompletedFeelings(conflictId: UUID): Int
 }

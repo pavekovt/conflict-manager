@@ -33,6 +33,7 @@ object RetrospectiveUsers : Table("retrospective_users") {
 enum class RetroStatus {
     SCHEDULED,
     IN_PROGRESS,
+    PROCESSING_DISCUSSION_POINTS,  // AI is generating discussion points in background
     COMPLETED,
     CANCELLED
 }

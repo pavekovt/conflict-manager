@@ -14,5 +14,6 @@ fun Application.module() {
     configureSecurity()
     configureDatabase()
     configureHTTP()
+    configureSSE()
     configureRouting()
 }

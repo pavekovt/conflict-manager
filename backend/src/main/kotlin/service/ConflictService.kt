@@ -1,17 +1,19 @@
 package me.pavekovt.service
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import me.pavekovt.ai.AIProvider
 import me.pavekovt.dto.AISummaryDTO
 import me.pavekovt.dto.ConflictDTO
 import me.pavekovt.dto.ConflictFeelingsDTO
-import me.pavekovt.dto.FeelingsProcessingResult
 import me.pavekovt.entity.ConflictStatus
+import me.pavekovt.entity.JobType
 import me.pavekovt.repository.*
 import java.util.UUID
 
 /**
- * Simple service for conflict data operations.
- * Business logic and validation should be in ConflictFacade.
+ * Service for conflict data operations with async AI processing.
  */
 class ConflictService(
     private val conflictRepository: ConflictRepository,
@@ -19,7 +21,8 @@ class ConflictService(
     private val resolutionRepository: ResolutionRepository,
     private val aiSummaryRepository: AISummaryRepository,
     private val decisionRepository: DecisionRepository,
-    private val aiProvider: AIProvider
+    private val jobRepository: JobRepository,
+    private val jobProcessorService: JobProcessorService
 ) {
 
     suspend fun create(userId: UUID): ConflictDTO {
@@ -35,7 +38,8 @@ class ConflictService(
     }
 
     /**
-     * Submit feelings for a conflict and get AI guidance
+     * Submit feelings for a conflict. Returns immediately with PROCESSING status.
+     * AI processing happens in background via JobProcessorService.
      */
     suspend fun submitFeelings(
         conflictId: UUID,
@@ -43,52 +47,51 @@ class ConflictService(
         feelingsText: String,
         partnershipContext: String? = null
     ): ConflictFeelingsDTO {
-        // Check if user already submitted feelings
-        if (conflictFeelingsRepository.hasSubmittedFeelings(conflictId, userId)) {
-            throw IllegalStateException("You have already submitted your feelings for this conflict")
-        }
-
-        // Get AI guidance and suggested resolution
-        val aiResponse = aiProvider.processFeelingsAndSuggestResolution(feelingsText, partnershipContext)
-
-        // Save feelings with AI response
+        // Create feelings entry with PROCESSING status
         val feelings = conflictFeelingsRepository.create(
             conflictId = conflictId,
             userId = userId,
-            feelingsText = feelingsText,
-            aiGuidance = aiResponse.guidance,
-            suggestedResolution = aiResponse.suggestedResolution
+            feelingsText = feelingsText
         )
 
-        // Check if both partners have now submitted feelings
-        val feelingsCount = conflictFeelingsRepository.countSubmittedFeelings(conflictId)
-        if (feelingsCount == 2) {
-            // Move conflict to PENDING_RESOLUTIONS status
-            conflictRepository.updateStatus(conflictId, ConflictStatus.PENDING_RESOLUTIONS)
-        }
+        // Create background job for AI processing
+        val payload = buildJsonObject {
+            put("partnershipContext", partnershipContext)
+        }.toString()
+
+        val job = jobRepository.create(
+            jobType = JobType.PROCESS_FEELINGS,
+            entityId = UUID.fromString(feelings.id),
+            payload = payload
+        )
+
+        // Queue job for processing
+        jobProcessorService.queueJob(UUID.fromString(job.id))
 
         return feelings
     }
 
     /**
-     * Get feelings for a conflict
+     * Get all feelings for a user in a specific conflict
      */
-    suspend fun getFeelings(conflictId: UUID, userId: UUID): ConflictFeelingsDTO? {
+    suspend fun getFeelings(conflictId: UUID, userId: UUID): List<ConflictFeelingsDTO> {
         return conflictFeelingsRepository.findByConflictAndUser(conflictId, userId)
     }
 
     /**
-     * Check if both partners have submitted their feelings
+     * Get all feelings for a conflict (both users)
      */
-    suspend fun bothFeelingsSubmitted(conflictId: UUID): Boolean {
-        return conflictFeelingsRepository.countSubmittedFeelings(conflictId) == 2
+    suspend fun getAllFeelingsForConflict(conflictId: UUID): List<ConflictFeelingsDTO> {
+        return conflictFeelingsRepository.findByConflict(conflictId)
     }
 
+    /**
+     * Submit resolution. If both resolutions submitted, queue AI summary generation job.
+     */
     suspend fun submitResolution(
         conflictId: UUID,
         userId: UUID,
-        resolutionText: String,
-        partnershipContext: String? = null
+        resolutionText: String
     ): ConflictDTO {
         // Check if user already submitted
         if (resolutionRepository.hasResolution(conflictId, userId)) {
@@ -102,26 +105,17 @@ class ConflictService(
         val bothResolutions = resolutionRepository.getBothResolutions(conflictId)
 
         if (bothResolutions != null) {
-            // Generate AI summary with historical context
-            val summary = aiProvider.summarizeConflict(
-                bothResolutions.first,
-                bothResolutions.second,
-                partnershipContext
+            // Update conflict status to PROCESSING_SUMMARY
+            conflictRepository.updateStatus(conflictId, ConflictStatus.PROCESSING_SUMMARY)
+
+            // Create background job for AI summary generation
+            val job = jobRepository.create(
+                jobType = JobType.GENERATE_SUMMARY,
+                entityId = conflictId
             )
 
-            // Save enhanced summary with all fields
-            aiSummaryRepository.create(
-                conflictId = conflictId,
-                summaryText = summary.summary,
-                provider = summary.provider,
-                patterns = summary.patterns,
-                advice = summary.advice,
-                recurringIssues = summary.recurringIssues,
-                themeTags = summary.themeTags
-            )
-
-            // Update conflict status
-            conflictRepository.updateStatus(conflictId, ConflictStatus.SUMMARY_GENERATED)
+            // Queue job for processing
+            jobProcessorService.queueJob(UUID.fromString(job.id))
         }
 
         return conflictRepository.findById(conflictId)
