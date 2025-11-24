@@ -1,6 +1,7 @@
 package me.pavekovt.facade
 
 import me.pavekovt.dto.DecisionDTO
+import me.pavekovt.exception.NotFoundException
 import me.pavekovt.service.DecisionService
 import java.util.UUID
 
@@ -36,7 +37,7 @@ class DecisionFacade(
         // Verify user has access to this decision
         val hasAccess = decisionService.isAccessibleByUser(id, userId, partnerId)
         if (!hasAccess) {
-            throw IllegalStateException("Decision not found or you don't have permission")
+            throw NotFoundException()
         }
 
         return decisionService.findById(id)

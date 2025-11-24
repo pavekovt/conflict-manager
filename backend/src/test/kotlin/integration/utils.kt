@@ -2,6 +2,7 @@ package me.pavekovt.integration
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.patch
@@ -12,16 +13,28 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import kotlinx.datetime.LocalDateTime
 import me.pavekovt.dto.AISummaryDTO
 import me.pavekovt.dto.ConflictDTO
+import me.pavekovt.dto.DecisionDTO
+import me.pavekovt.dto.NoteDTO
 import me.pavekovt.dto.PartnerInviteRequest
 import me.pavekovt.dto.PartnershipDTO
+import me.pavekovt.dto.RetrospectiveDTO
+import me.pavekovt.dto.RetrospectiveWithNotesDTO
 import me.pavekovt.dto.UserDTO
 import me.pavekovt.dto.exchange.AuthResponse
+import me.pavekovt.dto.exchange.CreateNoteRequest
+import me.pavekovt.dto.exchange.CreateRetrospectiveRequest
 import me.pavekovt.dto.exchange.RegisterRequest
 import me.pavekovt.dto.exchange.SubmitResolutionRequest
+import me.pavekovt.dto.exchange.UpdateNoteRequest
+import me.pavekovt.entity.NoteStatus
+import java.util.Calendar
+import java.util.Date
 import java.util.UUID
 import kotlin.test.assertEquals
+import kotlin.time.Instant
 
 data class Partners(
     val user1Email: String,
@@ -30,16 +43,19 @@ data class Partners(
 
 data class TestUser(
     val email: String,
-    val token: String
+    val token: String,
+    val id: String,
 )
 
 open class TestSdkUtils(
     private val baseUrl: String,
     private val client: HttpClient,
 ) {
-    suspend fun registerPartners(partners: Partners): Pair<TestUser, TestUser> {
-        val user1 = registerUser(partners.user1Email + UUID.randomUUID().toString(), name = "user1")
-        val user2 = registerUser(partners.user2Email  + UUID.randomUUID().toString(), name = "user2")
+    suspend fun registerPartners(
+        partners: Partners = Partners("${UUID.randomUUID()}@test.com", "${UUID.randomUUID()}@test.com"))
+    : Pair<TestUser, TestUser> {
+        val user1 = registerUser(partners.user1Email, name = "user1")
+        val user2 = registerUser(partners.user2Email, name = "user2")
 
         val partnershipId = user1.sendInvite(user2.email).id
         user2.acceptInvite(partnershipId)
@@ -47,7 +63,7 @@ open class TestSdkUtils(
         return Pair(user1, user2)
     }
 
-    suspend fun registerUser(email: String, name: String): TestUser {
+    suspend fun registerUser(email: String = "${UUID.randomUUID()}@test.com", name: String = "Some name"): TestUser {
         val registerRequest = RegisterRequest(email = email, name = name, password = "password123")
         val response = client.post("$baseUrl/api/auth/register") {
             contentType(ContentType.Application.Json)
@@ -60,7 +76,7 @@ open class TestSdkUtils(
         if (data.user == null) {
             throw IllegalStateException("User is null!")
         }
-        return TestUser(data.user.email, data.token)
+        return TestUser(data.user.email, data.token, data.user.id)
     }
 
     suspend fun TestUser.sendInvite(email: String, expectedStatus: HttpStatusCode = HttpStatusCode.Created): PartnershipDTO {
@@ -166,6 +182,227 @@ open class TestSdkUtils(
         return client.get("$baseUrl/api/conflicts/${id}/summary") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
+    }
+
+    suspend fun TestUser.getDecisionRaw(id: String): HttpResponse {
+        return client.get("$baseUrl/api/decisions/$id") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+    }
+
+    suspend fun TestUser.getDecision(id: String): DecisionDTO {
+        val response = getDecisionRaw(id)
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        return response.body()
+    }
+
+    suspend fun TestUser.getDecisionsRaw(): HttpResponse {
+        return client.get("$baseUrl/api/decisions") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+    }
+
+    suspend fun TestUser.getDecisions(): List<DecisionDTO> {
+        val response = getDecisionsRaw()
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        return response.body()
+    }
+
+    suspend fun TestUser.reviewDecisionRaw(id: String): HttpResponse {
+        return client.patch("$baseUrl/api/decisions/$id/review") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+    }
+
+    suspend fun TestUser.reviewDecision(id: String): DecisionDTO {
+        val response = reviewDecisionRaw(id)
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        return response.body()
+    }
+
+    suspend fun TestUser.archiveDecisionRaw(id: String): HttpResponse {
+        return client.patch("$baseUrl/api/decisions/$id/archive") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+    }
+
+    suspend fun TestUser.archiveDecision(id: String): DecisionDTO {
+        val response = archiveDecisionRaw(id)
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        return response.body()
+    }
+
+    suspend fun TestUser.createNoteRaw(text: String = "Note text"): HttpResponse {
+        return client.post("$baseUrl/api/notes") {
+            contentType(ContentType.Application.Json)
+            header(HttpHeaders.Authorization, "Bearer $token")
+            setBody(CreateNoteRequest(content = text))
+        }
+    }
+
+    suspend fun TestUser.createNote(text: String = "Note text"): NoteDTO {
+        val response = createNoteRaw(text)
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        return response.body()
+    }
+
+    suspend fun TestUser.deleteNoteRaw(id: String): HttpResponse {
+        return client.delete("$baseUrl/api/notes/${id}") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+    }
+
+    suspend fun TestUser.deleteNote(id: String): Boolean {
+        val response = deleteNoteRaw(id)
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        return response.body<Map<String, Boolean>>()["success"]!!
+    }
+
+
+    suspend fun TestUser.getNoteRaw(id: String): HttpResponse {
+        return client.get("$baseUrl/api/notes/${id}") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+    }
+
+    suspend fun TestUser.getNote(id: String): NoteDTO {
+        val response = getNoteRaw(id)
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        return response.body()
+    }
+
+    suspend fun TestUser.patchNoteStatusRaw(id: String, noteStatus: NoteStatus): HttpResponse {
+        return client.patch("$baseUrl/api/notes/${id}") {
+            contentType(ContentType.Application.Json)
+            header(HttpHeaders.Authorization, "Bearer $token")
+            setBody(UpdateNoteRequest(status = noteStatus.name))
+        }
+    }
+
+    suspend fun TestUser.patchNoteStatus(id: String, noteStatus: NoteStatus): NoteDTO {
+        val response = patchNoteStatusRaw(id, noteStatus)
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        return response.body()
+    }
+
+    suspend fun TestUser.createRetrospectiveRaw(scheduledDate: String?, users: List<String>?): HttpResponse {
+        return client.post("$baseUrl/api/retrospectives") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+            setBody(CreateRetrospectiveRequest(scheduledDate = scheduledDate))
+            contentType(ContentType.Application.Json)
+        }
+    }
+
+    suspend fun TestUser.createRetrospective(scheduledDate: String? = null, users: List<String>? = null): RetrospectiveDTO {
+        val response = createRetrospectiveRaw(scheduledDate, users)
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        return response.body()
+    }
+
+    suspend fun TestUser.getRetrospectiveRaw(id: String): HttpResponse {
+        return client.get("$baseUrl/api/retrospectives/$id") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+    }
+
+    suspend fun TestUser.getRetrospective(id: String): RetrospectiveDTO {
+        val response = getRetrospectiveRaw(id)
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        return response.body()
+    }
+
+    suspend fun TestUser.getRetrospectivesRaw(): HttpResponse {
+        return client.get("$baseUrl/api/retrospectives") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+    }
+
+    suspend fun TestUser.getRetrospectives(): List<RetrospectiveDTO> {
+        val response = getRetrospectivesRaw()
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        return response.body()
+    }
+
+    suspend fun TestUser.addRetrospectiveNoteRaw(id: String, noteId: String): HttpResponse {
+        return client.post("$baseUrl/api/retrospectives/${id}/add-note") {
+            contentType(ContentType.Application.Json)
+            header(HttpHeaders.Authorization, "Bearer $token")
+            setBody(AddNoteToRetroRequest(noteId = noteId))
+        }
+    }
+
+    suspend fun TestUser.addRetrospectiveNote(id: String, noteId: String): Boolean {
+        val response = addRetrospectiveNoteRaw(id, noteId)
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        return response.body<Map<String, Boolean>>()["success"]!!
+    }
+
+    suspend fun TestUser.getRetrospectiveNotesRaw(id: String): HttpResponse {
+        return client.get("$baseUrl/api/retrospectives/${id}/notes") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+    }
+
+    suspend fun TestUser.getRetrospectiveNotes(id: String): RetrospectiveWithNotesDTO {
+        val response = getRetrospectiveNotesRaw(id)
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        return response.body()
+    }
+
+    suspend fun TestUser.completeRetroRaw(id: String, topics: String): HttpResponse {
+        return client.post("$baseUrl/api/retrospectives/$id/complete") {
+            contentType(ContentType.Application.Json)
+            header(HttpHeaders.Authorization, "Bearer $token")
+            setBody(CompleteRetroRequest(finalSummary = topics))
+        }
+    }
+
+    suspend fun TestUser.completeRetro(id: String, topics: String = "We discussed important topics"): Boolean {
+        val response = completeRetroRaw(id, topics)
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        return response.body<Map<String, Boolean>>()["success"]!!
+    }
+
+    suspend fun TestUser.cancelRetroRaw(id: String): HttpResponse {
+        return client.patch("$baseUrl/api/retrospectives/$id/cancel") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+    }
+
+    suspend fun TestUser.cancelRetro(id: String): Boolean {
+        val response = cancelRetroRaw(id)
+
+        assertEquals(HttpStatusCode.OK, response.status)
+
+        return response.body<Map<String, Boolean>>()["success"]!!
     }
 
     suspend fun TestUser.acceptInvite(id: String): PartnershipDTO {

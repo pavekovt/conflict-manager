@@ -3,6 +3,7 @@ package me.pavekovt.facade
 import me.pavekovt.dto.NoteDTO
 import me.pavekovt.dto.exchange.CreateNoteRequest
 import me.pavekovt.dto.exchange.UpdateNoteRequest
+import me.pavekovt.exception.NotFoundException
 import me.pavekovt.service.NoteService
 import java.util.UUID
 
@@ -28,7 +29,7 @@ class NoteFacade(
 
     suspend fun findById(noteId: UUID, userId: UUID): NoteDTO {
         return noteService.findById(noteId, userId)
-            ?: throw IllegalStateException("Note not found or you don't have permission")
+            ?: throw NotFoundException()
     }
 
     suspend fun update(noteId: UUID, request: UpdateNoteRequest, userId: UUID): NoteDTO {

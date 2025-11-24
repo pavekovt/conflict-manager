@@ -14,7 +14,7 @@ class ConflictsApiTest : IntegrationTestBase() {
     fun `POST conflicts should create a new conflict`() = runBlocking {
         utils.run {
             // Given
-            val (user) = utils.registerPartners(Partners("user1@test.com", "user2@test.com"))
+            val (user) = utils.registerPartners()
 
             // When
             val conflict = user.createConflict()
@@ -33,7 +33,7 @@ class ConflictsApiTest : IntegrationTestBase() {
     fun `GET conflicts should return user's conflicts`() = runBlocking {
         // Given
         utils.run {
-            val (user1) = utils.registerPartners(Partners("user1@test.com", "user2@test.com"))
+            val (user1) = utils.registerPartners()
 
             // Given
             user1.createConflict()
@@ -50,7 +50,7 @@ class ConflictsApiTest : IntegrationTestBase() {
     fun `GET conflict by id should return conflict details`() = runBlocking {
         utils.run {
             // Given
-            val (user1) = utils.registerPartners(Partners("user1@test.com", "user2@test.com"))
+            val (user1) = utils.registerPartners()
             val conflict = user1.createConflict()
 
             // When
@@ -65,7 +65,7 @@ class ConflictsApiTest : IntegrationTestBase() {
     fun `POST resolution should submit user's resolution`() = runBlocking {
         utils.run {
             // Given
-            val (user1) = utils.registerPartners(Partners("user1@test.com", "user2@test.com"))
+            val (user1) = utils.registerPartners()
             val conflict = user1.createConflict()
 
             // When
@@ -80,7 +80,7 @@ class ConflictsApiTest : IntegrationTestBase() {
     fun `POST resolution should fail when resolution already submitted`(): Unit = runBlocking {
         utils.run {
             // Given
-            val (user1) = utils.registerPartners(Partners("user1@test.com", "user2@test.com"))
+            val (user1) = utils.registerPartners()
             val conflict = user1.createConflict()
 
             // Submit first resolution
@@ -98,7 +98,7 @@ class ConflictsApiTest : IntegrationTestBase() {
     fun `AI summary should be generated when both partners submit resolutions`() = runBlocking {
         utils.run {
             // Given
-            val (user1, user2) = utils.registerPartners(Partners("user1@test.com", "user2@test.com"))
+            val (user1, user2) = utils.registerPartners()
             val conflict = user1.createConflict()
 
             // User 1 submits resolution
@@ -119,7 +119,7 @@ class ConflictsApiTest : IntegrationTestBase() {
     fun `GET summary should fail before both resolutions submitted`(): Unit = runBlocking {
         utils.run {
             // Given
-            val (user1) = utils.registerPartners(Partners("user1@test.com", "user2@test.com"))
+            val (user1) = utils.registerPartners()
             val conflict = user1.createConflict()
 
             // When
@@ -135,7 +135,7 @@ class ConflictsApiTest : IntegrationTestBase() {
     fun `PATCH approve should approve summary`() = runBlocking {
         utils.run {
             // Given
-            val (user1, user2) = utils.registerPartners(Partners("user1@test.com", "user2@test.com"))
+            val (user1, user2) = utils.registerPartners()
             val conflict = user1.createConflict()
 
             user1.submitConflictResolution(conflict.id)
@@ -154,7 +154,7 @@ class ConflictsApiTest : IntegrationTestBase() {
     fun `PATCH request-refinement should change status to refinement`() = runBlocking {
         utils.run {
             // Given
-            val (user1, user2) = utils.registerPartners(Partners("user1@test.com", "user2@test.com"))
+            val (user1, user2) = utils.registerPartners()
             val conflict = user1.createConflict()
 
             user1.submitConflictResolution(conflict.id)
@@ -173,7 +173,7 @@ class ConflictsApiTest : IntegrationTestBase() {
     fun `PATCH archive should archive conflict`() = runBlocking {
         utils.run {
             // Given
-            val (user1, user2) = utils.registerPartners(Partners("user1@test.com", "user2@test.com"))
+            val (user1, user2) = utils.registerPartners()
             val conflict = user1.createConflict()
 
             // When

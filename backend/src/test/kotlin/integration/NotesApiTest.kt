@@ -185,16 +185,16 @@ class NotesApiTest : IntegrationTestBase() {
 
     @Test
     fun `GET note by id should return 404 for non-existent note`() = runBlocking {
-        // Given
-        val token = registerAndLogin()
+        utils.run {
+            // Given
+            val user = registerUser()
 
-        // When
-        val response = client.get("$baseUrl/api/notes/00000000-0000-0000-0000-000000000000") {
-            header(HttpHeaders.Authorization, "Bearer $token")
+            // When
+            val response = user.getNoteRaw("00000000-0000-0000-0000-000000000000")
+
+            // Then
+            assertEquals(HttpStatusCode.NotFound, response.status)
         }
-
-        // Then
-        assertEquals(HttpStatusCode.NotFound, response.status)
     }
 
     @Test
@@ -231,70 +231,35 @@ class NotesApiTest : IntegrationTestBase() {
 
     @Test
     fun `DELETE note should remove the note`() = runBlocking {
-        // Given
-        val token = registerAndLogin()
+        utils.run {
+            // Given
+            val user = registerUser()
 
-        val createResponse = client.post("$baseUrl/api/notes") {
-            contentType(ContentType.Application.Json)
-            header(HttpHeaders.Authorization, "Bearer $token")
-            setBody(CreateNoteRequest(content = "Note to delete"))
+            val note = user.createNote()
+
+            // When
+            user.deleteNote(note.id)
+
+            // Then
+            val getResponse = user.getNoteRaw(note.id)
+            assertEquals(HttpStatusCode.NotFound, getResponse.status)
         }
-        val createdNote = createResponse.body<NoteDTO>()
-
-        // When
-        val deleteResponse = client.delete("$baseUrl/api/notes/${createdNote.id}") {
-            header(HttpHeaders.Authorization, "Bearer $token")
-        }
-
-        // Then
-        assertEquals(HttpStatusCode.OK, deleteResponse.status)
-
-        // Verify note is deleted
-        val getResponse = client.get("$baseUrl/api/notes/${createdNote.id}") {
-            header(HttpHeaders.Authorization, "Bearer $token")
-        }
-        assertEquals(HttpStatusCode.NotFound, getResponse.status)
     }
 
     @Test
     fun `user should not be able to access another user's notes`() = runBlocking {
-        // Given - User 1 creates a note
-        val user1Request = RegisterRequest(
-            email = "user1@example.com",
-            name = "User 1",
-            password = "password123"
-        )
-        val user1Response = client.post("$baseUrl/api/auth/register") {
-            contentType(ContentType.Application.Json)
-            setBody(user1Request)
-        }
-        val user1Auth = user1Response.body<AuthResponse>()
+        utils.run {
+            // Given - User 1 creates a note
+            val user1 = registerUser()
+            val user1Note = user1.createNote()
 
-        val createResponse = client.post("$baseUrl/api/notes") {
-            contentType(ContentType.Application.Json)
-            header(HttpHeaders.Authorization, "Bearer ${user1Auth.token}")
-            setBody(CreateNoteRequest(content = "User 1's private note"))
-        }
-        val user1Note = createResponse.body<NoteDTO>()
+            val user2 = registerUser()
 
-        // User 2 registers
-        val user2Request = RegisterRequest(
-            email = "user2@example.com",
-            name = "User 2",
-            password = "password123"
-        )
-        val user2Response = client.post("$baseUrl/api/auth/register") {
-            contentType(ContentType.Application.Json)
-            setBody(user2Request)
-        }
-        val user2Auth = user2Response.body<AuthResponse>()
+            // When - User 2 tries to access User 1's note
+            val response = user2.getNoteRaw(user1Note.id)
 
-        // When - User 2 tries to access User 1's note
-        val response = client.get("$baseUrl/api/notes/${user1Note.id}") {
-            header(HttpHeaders.Authorization, "Bearer ${user2Auth.token}")
+            // Then - Shoul`d return 404 (privacy: act like it doesn't exist```~)
+            assertEquals(HttpStatusCode.NotFound, response.status)
         }
-
-        // Then - Should return 404 (privacy: act like it doesn't exist)
-        assertEquals(HttpStatusCode.NotFound, response.status)
     }
 }
