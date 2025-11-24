@@ -2,18 +2,19 @@ package me.pavekovt.configuration
 
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
-import io.ktor.server.config.*
 import kotlinx.serialization.json.Json
-import me.pavekovt.ai.*
+import me.pavekovt.ai.AIProvider
+import me.pavekovt.ai.ClaudeAIProvider
+import me.pavekovt.ai.MockAIProvider
 import me.pavekovt.facade.*
 import me.pavekovt.properties.AIProperties
 import me.pavekovt.properties.AuthenticationProperties
 import me.pavekovt.repository.*
 import me.pavekovt.service.*
-import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
@@ -75,6 +76,9 @@ fun Application.configureFrameworks() {
                             prettyPrint = true
                         })
                     }
+                    install(HttpTimeout) {
+                        requestTimeoutMillis = 15000
+                    }
                 }
             }
 
@@ -93,6 +97,7 @@ fun Application.configureFrameworks() {
                             model = aiProperties.model
                         )
                     }
+
                     "mock" -> MockAIProvider()
                     else -> throw IllegalStateException("Unknown AI provider: ${aiProperties.provider}. Use 'mock' or 'claude'.")
                 }
@@ -104,6 +109,7 @@ fun Application.configureFrameworks() {
             single<UserRepository> { UserRepositoryImpl() }
             single<NoteRepository> { NoteRepositoryImpl() }
             single<ConflictRepository> { ConflictRepositoryImpl() }
+            single<ConflictFeelingsRepository> { ConflictFeelingsRepositoryImpl() }
             single<ResolutionRepository> { ResolutionRepositoryImpl() }
             single<AISummaryRepository> { AISummaryRepositoryImpl() }
             single<DecisionRepository> { DecisionRepositoryImpl() }
@@ -118,7 +124,7 @@ fun Application.configureFrameworks() {
             single { UserService(get()) }
             single { NoteService(get()) }
             single { PartnershipService(get()) }
-            single { ConflictService(get(), get(), get(), get(), get()) }
+            single { ConflictService(get(), get(), get(), get(), get(), get()) }
             single { DecisionService(get()) }
             single { RetrospectiveService(get(), get(), get()) }
 

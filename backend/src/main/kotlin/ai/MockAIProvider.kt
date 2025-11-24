@@ -1,5 +1,6 @@
 package me.pavekovt.ai
 
+import me.pavekovt.dto.FeelingsProcessingResult
 import me.pavekovt.dto.NoteDTO
 
 /**
@@ -7,6 +8,84 @@ import me.pavekovt.dto.NoteDTO
  * Replace with real Claude or OpenAI implementation in production.
  */
 class MockAIProvider : AIProvider {
+
+    override suspend fun processFeelingsAndSuggestResolution(
+        userFeelings: String,
+        partnershipContext: String?
+    ): FeelingsProcessingResult {
+        // Mock: Detect emotional tone from keywords
+        val emotionalTone = when {
+            userFeelings.contains("angry", ignoreCase = true) ||
+            userFeelings.contains("furious", ignoreCase = true) -> "angry"
+            userFeelings.contains("hurt", ignoreCase = true) ||
+            userFeelings.contains("sad", ignoreCase = true) -> "hurt"
+            userFeelings.contains("frustrated", ignoreCase = true) ||
+            userFeelings.contains("annoyed", ignoreCase = true) -> "frustrated"
+            userFeelings.contains("worried", ignoreCase = true) ||
+            userFeelings.contains("anxious", ignoreCase = true) -> "concerned"
+            else -> "neutral"
+        }
+
+        // Generate empathetic guidance based on tone
+        val guidance = when (emotionalTone) {
+            "angry" -> """
+                I hear that you're feeling angry about this situation. That's completely valid - anger often signals that an important boundary or value has been crossed.
+
+                Before moving forward, take a moment to breathe. What's underneath the anger? Often it's hurt, fear, or feeling unheard. Understanding this can help you communicate more effectively.
+
+                When you're ready, try expressing your needs without blame: "I need..." rather than "You always..."
+            """.trimIndent()
+
+            "hurt" -> """
+                I can see this situation has hurt you. Your feelings are valid and deserve to be acknowledged.
+
+                Hurt often comes from unmet expectations or feeling disconnected. As you process this, consider: What did you hope would happen? What need wasn't met?
+
+                When sharing with your partner, vulnerability can be powerful. "I felt hurt when..." can open the door to deeper understanding.
+            """.trimIndent()
+
+            "frustrated" -> """
+                Frustration is understandable - it often arises when things aren't working as expected or when communication feels stuck.
+
+                This is actually a good sign that you care about resolving this. The key is channeling that energy constructively.
+
+                Try to identify the specific pattern or behavior that's frustrating you, rather than focusing on your partner's character. This makes it easier to find solutions.
+            """.trimIndent()
+
+            else -> """
+                Thank you for sharing your perspective on this conflict. Taking time to express your feelings is an important first step toward resolution.
+
+                As you think through this situation, consider:
+                - What's most important to you here?
+                - What would a good resolution look like?
+                - What do you need from your partner to move forward?
+            """.trimIndent()
+        }
+
+        // Generate suggested resolution based on feelings
+        val keywords = userFeelings.lowercase().split(" ")
+            .filter { it.length > 4 }
+            .distinct()
+            .take(3)
+            .joinToString(", ")
+
+        val suggestedResolution = """
+            Based on your feelings, here's a suggested approach:
+
+            1. Express your core need: Start with "I need..." to communicate what's most important to you
+            2. Acknowledge your partner's perspective: Even in conflict, try to understand their view
+            3. Propose a specific change: What one thing could improve this situation?
+
+            Example resolution:
+            "I need us to communicate more clearly about ${keywords.ifEmpty { "this issue" }}. I understand we may see things differently, but I'd like us to [specific action]. Moving forward, could we agree to [concrete step]?"
+        """.trimIndent()
+
+        return FeelingsProcessingResult(
+            guidance = guidance,
+            suggestedResolution = suggestedResolution,
+            emotionalTone = emotionalTone
+        )
+    }
 
     override suspend fun summarizeConflict(
         resolution1: String,

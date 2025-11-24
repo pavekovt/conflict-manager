@@ -1,12 +1,21 @@
 package me.pavekovt.ai
 
+import com.anthropic.client.AnthropicClient
+import com.anthropic.client.AnthropicClientAsync
+import com.anthropic.client.AnthropicClientAsyncImpl
+import com.anthropic.client.okhttp.AnthropicOkHttpClientAsync
+import com.anthropic.core.ClientOptions
+import com.anthropic.models.messages.MessageCreateParams
+import com.anthropic.models.messages.Model
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import kotlinx.coroutines.future.await
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import me.pavekovt.dto.FeelingsProcessingResult
 import me.pavekovt.dto.NoteDTO
 import org.slf4j.LoggerFactory
 
@@ -22,6 +31,22 @@ class ClaudeAIProvider(
 
     private val logger = LoggerFactory.getLogger(ClaudeAIProvider::class.java)
     private val apiUrl = "https://api.anthropic.com/v1/messages"
+
+    private var client: AnthropicClientAsync = AnthropicOkHttpClientAsync.builder()
+        .apiKey(apiKey)
+        .build()
+
+    override suspend fun processFeelingsAndSuggestResolution(
+        userFeelings: String,
+        partnershipContext: String?
+    ): FeelingsProcessingResult {
+        val prompt = buildFeelingsPrompt(userFeelings, partnershipContext)
+
+        val response = callClaude(prompt, systemPrompt = FEELINGS_PROCESSING_SYSTEM_PROMPT)
+
+        logger.debug("[processFeelingsAndSuggestResolution]: ${response.take(50)}")
+        return parseFeelingsResponse(response)
+    }
 
     override suspend fun summarizeConflict(
         resolution1: String,
@@ -67,33 +92,80 @@ class ClaudeAIProvider(
 
     private suspend fun callClaude(userMessage: String, systemPrompt: String): String {
         try {
-            val request = ClaudeRequest(
-                model = model,
-                maxTokens = 2048,
-                system = systemPrompt,
-                messages = listOf(ClaudeMessage(role = "user", content = userMessage))
+            val message = client.messages().create(
+                MessageCreateParams.builder()
+                    .model(Model.CLAUDE_SONNET_4_5)
+                    .system(systemPrompt)
+                    .addUserMessage(userMessage)
+                    .maxTokens(2048)
+                    .build()
             )
 
-            val response: HttpResponse = httpClient.post(apiUrl) {
-                header("x-api-key", apiKey)
-                header("anthropic-version", "2023-06-01")
-                contentType(ContentType.Application.Json)
-                setBody(request)
-            }
+            val result = message.await()
 
-            if (!response.status.isSuccess()) {
-                val errorBody = response.bodyAsText()
-                logger.error("Claude API error: ${response.status} - $errorBody")
-                throw IllegalStateException("Claude API error: ${response.status}")
-            }
 
-            val claudeResponse: ClaudeResponse = response.body()
+//            if (!response.status.isSuccess()) {
+//                val errorBody = response.bodyAsText()
+//                logger.error("Claude API error: ${response.status} - $errorBody")
+//                throw IllegalStateException("Claude API error: ${response.status}")
+//            }
+
+            val claudeResponse: ClaudeResponse = ClaudeResponse(result.content().map { ClaudeContent(it.text().get().text()) })
             return claudeResponse.content.firstOrNull()?.text
                 ?: throw IllegalStateException("Empty response from Claude")
 
         } catch (e: Exception) {
             logger.error("Failed to call Claude API", e)
             throw IllegalStateException("AI service temporarily unavailable", e)
+        }
+    }
+
+    private fun buildFeelingsPrompt(userFeelings: String, partnershipContext: String?): String {
+        return buildString {
+            if (partnershipContext != null) {
+                appendLine("# Partnership History")
+                appendLine(partnershipContext)
+                appendLine()
+            }
+
+            appendLine("# User's Feelings and Frustrations")
+            appendLine(userFeelings)
+            appendLine()
+            appendLine("Please process these feelings empathetically and provide guidance + suggested resolution following the JSON format specified in the system prompt.")
+        }
+    }
+
+    private fun parseFeelingsResponse(response: String): FeelingsProcessingResult {
+        return try {
+            val jsonStart = response.indexOf("{")
+            val jsonEnd = response.lastIndexOf("}") + 1
+
+            if (jsonStart >= 0 && jsonEnd > jsonStart) {
+                val jsonStr = response.substring(jsonStart, jsonEnd)
+                val guidance = extractJsonField(jsonStr, "guidance")
+                val suggestedResolution = extractJsonField(jsonStr, "suggested_resolution")
+                val emotionalTone = extractJsonField(jsonStr, "emotional_tone")
+
+                FeelingsProcessingResult(
+                    guidance = guidance.ifEmpty { response },
+                    suggestedResolution = suggestedResolution.ifEmpty { "Consider expressing your needs clearly and listening to your partner's perspective." },
+                    emotionalTone = emotionalTone.ifEmpty { "neutral" }
+                )
+            } else {
+                // Fallback: treat as unstructured text
+                FeelingsProcessingResult(
+                    guidance = response,
+                    suggestedResolution = "Consider expressing your needs clearly and listening to your partner's perspective.",
+                    emotionalTone = "neutral"
+                )
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to parse Claude feelings response", e)
+            FeelingsProcessingResult(
+                guidance = response,
+                suggestedResolution = "Consider expressing your needs clearly and listening to your partner's perspective.",
+                emotionalTone = "neutral"
+            )
         }
     }
 
@@ -324,6 +396,23 @@ class ClaudeAIProvider(
     }
 
     companion object {
+        private const val FEELINGS_PROCESSING_SYSTEM_PROMPT = """You are an empathetic relationship counselor AI helping someone process their feelings about a conflict.
+
+Your role is to:
+1. Validate their emotions without judgment
+2. Help them understand what's beneath their feelings
+3. Guide them toward constructive expression
+4. Suggest a resolution approach based on their needs
+
+Always respond in this exact JSON format:
+{
+  "guidance": "[Empathetic response acknowledging their feelings and helping them process emotions. 3-4 paragraphs providing emotional support and perspective.]",
+  "suggested_resolution": "[A concrete, actionable resolution approach tailored to their expressed feelings. Include specific language they could use when communicating with their partner.]",
+  "emotional_tone": "[One word: angry, hurt, frustrated, concerned, sad, anxious, or neutral]"
+}
+
+Be warm, validating, and focus on helping them communicate their needs effectively. Use "I" statements and avoid blame language in suggested resolutions."""
+
         private const val CONFLICT_SYSTEM_PROMPT = """You are a relationship counselor AI assistant helping couples resolve conflicts constructively.
 
 Your role is to:

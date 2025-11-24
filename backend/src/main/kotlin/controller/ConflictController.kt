@@ -40,6 +40,27 @@ fun Route.conflictRouting() {
                 call.respond(conflict)
             }
 
+            // Submit feelings (FIRST step in conflict resolution)
+            post("/{id}/feelings") {
+                val userId = call.getCurrentUserId()
+                val conflictId =
+                    UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing conflict ID"))
+                val request = call.receive<SubmitFeelingsRequest>()
+
+                val feelings = conflictFacade.submitFeelings(conflictId, userId, request.feelingsText)
+                call.respond(HttpStatusCode.OK, feelings)
+            }
+
+            // Get my feelings for a conflict (to see AI guidance)
+            get("/{id}/feelings") {
+                val userId = call.getCurrentUserId()
+                val conflictId =
+                    UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing conflict ID"))
+                val feelings = conflictFacade.getFeelings(conflictId, userId)
+                    ?: throw IllegalStateException("You haven't submitted your feelings for this conflict yet")
+                call.respond(feelings)
+            }
+
             // Submit resolution
             post("/{id}/resolutions") {
                 val userId = call.getCurrentUserId()

@@ -32,6 +32,7 @@ fun Application.configureDatabase() {
             Users,
             Notes,
             Conflicts,
+            ConflictFeelings,
             Resolutions,
             AISummaries,
             Decisions,

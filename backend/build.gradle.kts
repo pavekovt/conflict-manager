@@ -32,6 +32,7 @@ dependencies {
     implementation(libs.exposed.datetime)
 
     implementation(libs.bcrypt)
+    implementation(libs.anthropic)
 
     implementation(libs.ktor.serialization.jackson)
     implementation(libs.ktor.server.auth)

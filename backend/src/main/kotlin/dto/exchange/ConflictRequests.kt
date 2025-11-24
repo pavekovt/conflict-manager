@@ -8,6 +8,11 @@ data class CreateConflictRequest(
 )
 
 @Serializable
+data class SubmitFeelingsRequest(
+    val feelingsText: String
+)
+
+@Serializable
 data class SubmitResolutionRequest(
     val resolutionText: String
 )

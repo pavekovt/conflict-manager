@@ -3,6 +3,8 @@ package me.pavekovt.service
 import me.pavekovt.ai.AIProvider
 import me.pavekovt.dto.AISummaryDTO
 import me.pavekovt.dto.ConflictDTO
+import me.pavekovt.dto.ConflictFeelingsDTO
+import me.pavekovt.dto.FeelingsProcessingResult
 import me.pavekovt.entity.ConflictStatus
 import me.pavekovt.repository.*
 import java.util.UUID
@@ -13,6 +15,7 @@ import java.util.UUID
  */
 class ConflictService(
     private val conflictRepository: ConflictRepository,
+    private val conflictFeelingsRepository: ConflictFeelingsRepository,
     private val resolutionRepository: ResolutionRepository,
     private val aiSummaryRepository: AISummaryRepository,
     private val decisionRepository: DecisionRepository,
@@ -29,6 +32,56 @@ class ConflictService(
 
     suspend fun findByUser(userId: UUID, partnersIds: List<UUID>): List<ConflictDTO> {
         return conflictRepository.findByUser(userId, partnersIds)
+    }
+
+    /**
+     * Submit feelings for a conflict and get AI guidance
+     */
+    suspend fun submitFeelings(
+        conflictId: UUID,
+        userId: UUID,
+        feelingsText: String,
+        partnershipContext: String? = null
+    ): ConflictFeelingsDTO {
+        // Check if user already submitted feelings
+        if (conflictFeelingsRepository.hasSubmittedFeelings(conflictId, userId)) {
+            throw IllegalStateException("You have already submitted your feelings for this conflict")
+        }
+
+        // Get AI guidance and suggested resolution
+        val aiResponse = aiProvider.processFeelingsAndSuggestResolution(feelingsText, partnershipContext)
+
+        // Save feelings with AI response
+        val feelings = conflictFeelingsRepository.create(
+            conflictId = conflictId,
+            userId = userId,
+            feelingsText = feelingsText,
+            aiGuidance = aiResponse.guidance,
+            suggestedResolution = aiResponse.suggestedResolution
+        )
+
+        // Check if both partners have now submitted feelings
+        val feelingsCount = conflictFeelingsRepository.countSubmittedFeelings(conflictId)
+        if (feelingsCount == 2) {
+            // Move conflict to PENDING_RESOLUTIONS status
+            conflictRepository.updateStatus(conflictId, ConflictStatus.PENDING_RESOLUTIONS)
+        }
+
+        return feelings
+    }
+
+    /**
+     * Get feelings for a conflict
+     */
+    suspend fun getFeelings(conflictId: UUID, userId: UUID): ConflictFeelingsDTO? {
+        return conflictFeelingsRepository.findByConflictAndUser(conflictId, userId)
+    }
+
+    /**
+     * Check if both partners have submitted their feelings
+     */
+    suspend fun bothFeelingsSubmitted(conflictId: UUID): Boolean {
+        return conflictFeelingsRepository.countSubmittedFeelings(conflictId) == 2
     }
 
     suspend fun submitResolution(

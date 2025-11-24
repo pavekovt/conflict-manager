@@ -1,8 +1,19 @@
 package me.pavekovt.ai
 
+import me.pavekovt.dto.FeelingsProcessingResult
 import me.pavekovt.dto.NoteDTO
 
 interface AIProvider {
+    /**
+     * Process a user's feelings and frustrations about a conflict.
+     * Provides empathetic guidance and suggests a resolution approach.
+     * This is the FIRST step in the conflict resolution process.
+     */
+    suspend fun processFeelingsAndSuggestResolution(
+        userFeelings: String,
+        partnershipContext: String? = null
+    ): FeelingsProcessingResult
+
     /**
      * Generate a comprehensive conflict summary with relationship advice.
      * Uses historical partnership context to provide relevant patterns and advice.

@@ -3,6 +3,7 @@ package me.pavekovt.facade
 import me.pavekovt.ai.AIProvider
 import me.pavekovt.dto.AISummaryDTO
 import me.pavekovt.dto.ConflictDTO
+import me.pavekovt.dto.ConflictFeelingsDTO
 import me.pavekovt.entity.ConflictStatus
 import me.pavekovt.repository.PartnershipContextRepository
 import me.pavekovt.repository.PartnershipRepository
@@ -43,6 +44,49 @@ class ConflictFacade(
 
     suspend fun findByUser(userId: UUID): List<ConflictDTO> {
         return conflictService.findByUser(userId, ownershipValidator.getHistoricalPartnerIds(userId))
+    }
+
+    /**
+     * Submit feelings/frustrations for a conflict.
+     * This is the FIRST step in the new conflict resolution flow.
+     * User expresses their feelings, AI provides guidance and suggests a resolution.
+     */
+    suspend fun submitFeelings(
+        conflictId: UUID,
+        userId: UUID,
+        feelingsText: String
+    ): ConflictFeelingsDTO {
+        require(feelingsText.isNotBlank()) { "Feelings text cannot be blank" }
+
+        // Verify user has access to this conflict
+        val conflict = findById(conflictId, userId)
+            ?: throw IllegalStateException("Conflict not found or you don't have permission")
+
+        // Check conflict is in correct status
+        if (conflict.status != ConflictStatus.PENDING_FEELINGS) {
+            throw IllegalStateException("Conflict is not in PENDING_FEELINGS status. Current status: ${conflict.status}")
+        }
+
+        // Get partnership context for AI
+        val partnershipDTO = partnershipRepository.findActivePartnership(userId)
+        val partnershipContext = if (partnershipDTO != null) {
+            val partnershipId = UUID.fromString(partnershipDTO.id)
+            partnershipContextRepository.getContext(partnershipId)?.compactedSummary
+        } else null
+
+        // Submit feelings and get AI guidance
+        return conflictService.submitFeelings(conflictId, userId, feelingsText, partnershipContext)
+    }
+
+    /**
+     * Get user's feelings for a conflict (to see AI guidance and suggested resolution)
+     */
+    suspend fun getFeelings(conflictId: UUID, userId: UUID): ConflictFeelingsDTO? {
+        // Verify user has access to this conflict
+        findById(conflictId, userId)
+            ?: throw IllegalStateException("Conflict not found or you don't have permission")
+
+        return conflictService.getFeelings(conflictId, userId)
     }
 
     suspend fun submitResolution(

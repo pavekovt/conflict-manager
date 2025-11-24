@@ -7,14 +7,15 @@ import org.jetbrains.exposed.v1.datetime.datetime
 
 object Conflicts : UUIDTable("conflicts") {
     val initiatedBy = reference("initiated_by", Users)
-    val status = enumerationByName<ConflictStatus>("status", 50).default(ConflictStatus.PENDING_RESOLUTIONS)
+    val status = enumerationByName<ConflictStatus>("status", 50).default(ConflictStatus.PENDING_FEELINGS)
     val createdAt = datetime("created_at").defaultExpression(CurrentDateTime)
 }
 
 enum class ConflictStatus {
-    PENDING_RESOLUTIONS,
-    SUMMARY_GENERATED,
-    REFINEMENT,
-    APPROVED,
-    ARCHIVED
+    PENDING_FEELINGS,      // Waiting for both partners to submit their feelings/frustrations
+    PENDING_RESOLUTIONS,   // Both submitted feelings, AI provided guidance, waiting for final resolutions
+    SUMMARY_GENERATED,     // AI created final summary from both resolutions
+    REFINEMENT,            // One or both partners requested changes to summary
+    APPROVED,              // Both partners approved summary, decision created
+    ARCHIVED               // Conflict closed without completion
 }

@@ -11,7 +11,8 @@
       "Bash(docker:*)",
       "Bash(timeout 90 ./gradlew test:*)",
       "Bash(xargs:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(..gradlew compileKotlin)"
     ],
     "deny": [],
     "ask": []
