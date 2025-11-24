@@ -1,0 +1,1185 @@
+{
+	"info": {
+		"_postman_id": "conflict-manager-api-dual",
+		"name": "Morning Brief API (Dual User)",
+		"description": "Couple's Conflict Resolution Manager API - User 1 & User 2 separate requests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "🔐 Auth",
+			"item": [
+				{
+					"name": "User 1",
+					"item": [
+						{
+							"name": "Register User 1",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Status code is 200', function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"if (pm.response.code === 200) {",
+											"    const jsonData = pm.response.json();",
+											"    pm.collectionVariables.set('user1Token', jsonData.token);",
+											"    pm.collectionVariables.set('user1Id', jsonData.user.id);",
+											"    console.log('User 1 tokens saved');",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {"type": "noauth"},
+								"method": "POST",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"{{user1Email}}\",\n  \"name\": \"{{user1Name}}\",\n  \"password\": \"{{user1Password}}\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/auth/register",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "auth", "register"]
+								}
+							}
+						},
+						{
+							"name": "Login User 1",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Status code is 200', function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"if (pm.response.code === 200) {",
+											"    const jsonData = pm.response.json();",
+											"    pm.collectionVariables.set('user1Token', jsonData.token);",
+											"    pm.collectionVariables.set('user1Id', jsonData.user.id);",
+											"    console.log('User 1 logged in');",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {"type": "noauth"},
+								"method": "POST",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"{{user1Email}}\",\n  \"password\": \"{{user1Password}}\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/auth/login",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "auth", "login"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "User 2",
+					"item": [
+						{
+							"name": "Register User 2",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Status code is 200', function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"if (pm.response.code === 200) {",
+											"    const jsonData = pm.response.json();",
+											"    pm.collectionVariables.set('user2Token', jsonData.token);",
+											"    pm.collectionVariables.set('user2Id', jsonData.user.id);",
+											"    console.log('User 2 tokens saved');",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {"type": "noauth"},
+								"method": "POST",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"{{user2Email}}\",\n  \"name\": \"{{user2Name}}\",\n  \"password\": \"{{user2Password}}\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/auth/register",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "auth", "register"]
+								}
+							}
+						},
+						{
+							"name": "Login User 2",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Status code is 200', function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"if (pm.response.code === 200) {",
+											"    const jsonData = pm.response.json();",
+											"    pm.collectionVariables.set('user2Token', jsonData.token);",
+											"    pm.collectionVariables.set('user2Id', jsonData.user.id);",
+											"    console.log('User 2 logged in');",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {"type": "noauth"},
+								"method": "POST",
+								"header": [{"key": "Content-Type", "value": "application/json"}],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"{{user2Email}}\",\n  \"password\": \"{{user2Password}}\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/auth/login",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "auth", "login"]
+								}
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "🤝 Partnerships",
+			"item": [
+				{
+					"name": "User 1",
+					"item": [
+						{
+							"name": "User 1 - Send Invitation to User 2",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test('Status code is 201', function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"if (pm.response.code === 201) {",
+											"    const jsonData = pm.response.json();",
+											"    pm.collectionVariables.set('partnershipId', jsonData.id);",
+											"    console.log('Partnership ID saved:', jsonData.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{"key": "Content-Type", "value": "application/json"},
+									{"key": "Authorization", "value": "Bearer {{user1Token}}"}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"partnerEmail\": \"{{user2Email}}\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/partnerships/invite",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "partnerships", "invite"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Get Invitations",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user1Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/partnerships/invitations",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "partnerships", "invitations"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Get Current Partnership",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user1Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/partnerships/current",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "partnerships", "current"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - End Partnership",
+							"request": {
+								"method": "DELETE",
+								"header": [{"key": "Authorization", "value": "Bearer {{user1Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/partnerships/current",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "partnerships", "current"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "User 2",
+					"item": [
+						{
+							"name": "User 2 - Get Invitations",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/partnerships/invitations",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "partnerships", "invitations"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Accept Invitation",
+							"request": {
+								"method": "POST",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/partnerships/{{partnershipId}}/accept",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "partnerships", "{{partnershipId}}", "accept"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Reject Invitation",
+							"request": {
+								"method": "POST",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/partnerships/{{partnershipId}}/reject",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "partnerships", "{{partnershipId}}", "reject"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Get Current Partnership",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/partnerships/current",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "partnerships", "current"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - End Partnership",
+							"request": {
+								"method": "DELETE",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/partnerships/current",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "partnerships", "current"]
+								}
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "📝 Notes",
+			"item": [
+				{
+					"name": "User 1",
+					"item": [
+						{
+							"name": "User 1 - Create Note",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 200) {",
+											"    const jsonData = pm.response.json();",
+											"    pm.collectionVariables.set('user1NoteId', jsonData.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{"key": "Content-Type", "value": "application/json"},
+									{"key": "Authorization", "value": "Bearer {{user1Token}}"}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"User 1: I feel frustrated when dishes are left in the sink\",\n  \"mood\": \"frustrated\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/notes",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "notes"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Get My Notes",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user1Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/notes",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "notes"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Get Note by ID",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user1Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/notes/{{user1NoteId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "notes", "{{user1NoteId}}"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Update Note",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{"key": "Content-Type", "value": "application/json"},
+									{"key": "Authorization", "value": "Bearer {{user1Token}}"}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"status\": \"ready_for_discussion\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/notes/{{user1NoteId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "notes", "{{user1NoteId}}"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Delete Note",
+							"request": {
+								"method": "DELETE",
+								"header": [{"key": "Authorization", "value": "Bearer {{user1Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/notes/{{user1NoteId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "notes", "{{user1NoteId}}"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "User 2",
+					"item": [
+						{
+							"name": "User 2 - Create Note",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 200) {",
+											"    const jsonData = pm.response.json();",
+											"    pm.collectionVariables.set('user2NoteId', jsonData.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{"key": "Content-Type", "value": "application/json"},
+									{"key": "Authorization", "value": "Bearer {{user2Token}}"}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"content\": \"User 2: I feel overwhelmed with the cleaning schedule\",\n  \"mood\": \"concerned\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/notes",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "notes"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Get My Notes",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/notes",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "notes"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Get Note by ID",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/notes/{{user2NoteId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "notes", "{{user2NoteId}}"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Update Note",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{"key": "Content-Type", "value": "application/json"},
+									{"key": "Authorization", "value": "Bearer {{user2Token}}"}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"status\": \"ready_for_discussion\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/notes/{{user2NoteId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "notes", "{{user2NoteId}}"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Delete Note",
+							"request": {
+								"method": "DELETE",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/notes/{{user2NoteId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "notes", "{{user2NoteId}}"]
+								}
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "⚔️ Conflicts",
+			"item": [
+				{
+					"name": "User 1",
+					"item": [
+						{
+							"name": "User 1 - Initiate Conflict",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201 || pm.response.code === 200) {",
+											"    const jsonData = pm.response.json();",
+											"    pm.collectionVariables.set('conflictId', jsonData.id);",
+											"    console.log('Conflict ID:', jsonData.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{"key": "Content-Type", "value": "application/json"},
+									{"key": "Authorization", "value": "Bearer {{user1Token}}"}
+								],
+								"body": {"mode": "raw", "raw": "{}"},
+								"url": {
+									"raw": "{{baseUrl}}/api/conflicts",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "conflicts"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Get My Conflicts",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user1Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/conflicts",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "conflicts"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Get Conflict by ID",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user1Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/conflicts/{{conflictId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "conflicts", "{{conflictId}}"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Submit Resolution",
+							"request": {
+								"method": "POST",
+								"header": [
+									{"key": "Content-Type", "value": "application/json"},
+									{"key": "Authorization", "value": "Bearer {{user1Token}}"}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"resolutionText\": \"User 1: I will do dishes right after dinner, and you handle morning cleanup.\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/conflicts/{{conflictId}}/resolutions",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "conflicts", "{{conflictId}}", "resolutions"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Get AI Summary",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user1Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/conflicts/{{conflictId}}/summary",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "conflicts", "{{conflictId}}", "summary"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Approve Summary",
+							"request": {
+								"method": "POST",
+								"header": [{"key": "Authorization", "value": "Bearer {{user1Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/conflicts/{{conflictId}}/approve",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "conflicts", "{{conflictId}}", "approve"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Request Refinement",
+							"request": {
+								"method": "POST",
+								"header": [{"key": "Authorization", "value": "Bearer {{user1Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/conflicts/{{conflictId}}/request-refinement",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "conflicts", "{{conflictId}}", "request-refinement"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Archive Conflict",
+							"request": {
+								"method": "POST",
+								"header": [{"key": "Authorization", "value": "Bearer {{user1Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/conflicts/{{conflictId}}/archive",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "conflicts", "{{conflictId}}", "archive"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "User 2",
+					"item": [
+						{
+							"name": "User 2 - Initiate Conflict",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 201 || pm.response.code === 200) {",
+											"    const jsonData = pm.response.json();",
+											"    pm.collectionVariables.set('conflictId', jsonData.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{"key": "Content-Type", "value": "application/json"},
+									{"key": "Authorization", "value": "Bearer {{user2Token}}"}
+								],
+								"body": {"mode": "raw", "raw": "{}"},
+								"url": {
+									"raw": "{{baseUrl}}/api/conflicts",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "conflicts"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Get My Conflicts",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/conflicts",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "conflicts"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Get Conflict by ID",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/conflicts/{{conflictId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "conflicts", "{{conflictId}}"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Submit Resolution",
+							"request": {
+								"method": "POST",
+								"header": [
+									{"key": "Content-Type", "value": "application/json"},
+									{"key": "Authorization", "value": "Bearer {{user2Token}}"}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"resolutionText\": \"User 2: I agree to handle morning cleanup, and you do dishes after dinner.\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/conflicts/{{conflictId}}/resolutions",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "conflicts", "{{conflictId}}", "resolutions"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Get AI Summary",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/conflicts/{{conflictId}}/summary",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "conflicts", "{{conflictId}}", "summary"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Approve Summary",
+							"request": {
+								"method": "POST",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/conflicts/{{conflictId}}/approve",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "conflicts", "{{conflictId}}", "approve"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Request Refinement",
+							"request": {
+								"method": "POST",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/conflicts/{{conflictId}}/request-refinement",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "conflicts", "{{conflictId}}", "request-refinement"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Archive Conflict",
+							"request": {
+								"method": "POST",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/conflicts/{{conflictId}}/archive",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "conflicts", "{{conflictId}}", "archive"]
+								}
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "✅ Decisions",
+			"item": [
+				{
+					"name": "User 1",
+					"item": [
+						{
+							"name": "User 1 - Get All Decisions",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user1Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/decisions",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "decisions"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Get Decision by ID",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": ["// Get first decision from list and save its ID"],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user1Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/decisions/{{decisionId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "decisions", "{{decisionId}}"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Mark Decision as Reviewed",
+							"request": {
+								"method": "PATCH",
+								"header": [{"key": "Authorization", "value": "Bearer {{user1Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/decisions/{{decisionId}}/review",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "decisions", "{{decisionId}}", "review"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Archive Decision",
+							"request": {
+								"method": "PATCH",
+								"header": [{"key": "Authorization", "value": "Bearer {{user1Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/decisions/{{decisionId}}/archive",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "decisions", "{{decisionId}}", "archive"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "User 2",
+					"item": [
+						{
+							"name": "User 2 - Get All Decisions",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/decisions",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "decisions"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Get Decision by ID",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/decisions/{{decisionId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "decisions", "{{decisionId}}"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Mark Decision as Reviewed",
+							"request": {
+								"method": "PATCH",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/decisions/{{decisionId}}/review",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "decisions", "{{decisionId}}", "review"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Archive Decision",
+							"request": {
+								"method": "PATCH",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/decisions/{{decisionId}}/archive",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "decisions", "{{decisionId}}", "archive"]
+								}
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "🔄 Retrospectives",
+			"item": [
+				{
+					"name": "User 1",
+					"item": [
+						{
+							"name": "User 1 - Trigger Manual Retro",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 200) {",
+											"    const jsonData = pm.response.json();",
+											"    pm.collectionVariables.set('retroId', jsonData.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{"key": "Content-Type", "value": "application/json"},
+									{"key": "Authorization", "value": "Bearer {{user1Token}}"}
+								],
+								"body": {"mode": "raw", "raw": "{}"},
+								"url": {
+									"raw": "{{baseUrl}}/api/retrospectives",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "retrospectives"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Get All Retrospectives",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user1Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/retrospectives",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "retrospectives"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Get Retro by ID",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user1Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/retrospectives/{{retroId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "retrospectives", "{{retroId}}"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Get Retro Notes",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user1Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/retrospectives/{{retroId}}/notes",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "retrospectives", "{{retroId}}", "notes"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Add Note to Retro",
+							"request": {
+								"method": "POST",
+								"header": [
+									{"key": "Content-Type", "value": "application/json"},
+									{"key": "Authorization", "value": "Bearer {{user1Token}}"}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"noteId\": \"{{user1NoteId}}\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/retrospectives/{{retroId}}/add-note",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "retrospectives", "{{retroId}}", "add-note"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Complete Retro",
+							"request": {
+								"method": "POST",
+								"header": [
+									{"key": "Content-Type", "value": "application/json"},
+									{"key": "Authorization", "value": "Bearer {{user1Token}}"}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"finalSummary\": \"User 1: We discussed dishes and scheduling. Both feel heard.\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/retrospectives/{{retroId}}/complete",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "retrospectives", "{{retroId}}", "complete"]
+								}
+							}
+						},
+						{
+							"name": "User 1 - Cancel Retro",
+							"request": {
+								"method": "PATCH",
+								"header": [{"key": "Authorization", "value": "Bearer {{user1Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/retrospectives/{{retroId}}/cancel",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "retrospectives", "{{retroId}}", "cancel"]
+								}
+							}
+						}
+					]
+				},
+				{
+					"name": "User 2",
+					"item": [
+						{
+							"name": "User 2 - Trigger Manual Retro",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 200) {",
+											"    const jsonData = pm.response.json();",
+											"    pm.collectionVariables.set('retroId', jsonData.id);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{"key": "Content-Type", "value": "application/json"},
+									{"key": "Authorization", "value": "Bearer {{user2Token}}"}
+								],
+								"body": {"mode": "raw", "raw": "{}"},
+								"url": {
+									"raw": "{{baseUrl}}/api/retrospectives",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "retrospectives"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Get All Retrospectives",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/retrospectives",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "retrospectives"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Get Retro by ID",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/retrospectives/{{retroId}}",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "retrospectives", "{{retroId}}"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Get Retro Notes",
+							"request": {
+								"method": "GET",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/retrospectives/{{retroId}}/notes",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "retrospectives", "{{retroId}}", "notes"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Add Note to Retro",
+							"request": {
+								"method": "POST",
+								"header": [
+									{"key": "Content-Type", "value": "application/json"},
+									{"key": "Authorization", "value": "Bearer {{user2Token}}"}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"noteId\": \"{{user2NoteId}}\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/retrospectives/{{retroId}}/add-note",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "retrospectives", "{{retroId}}", "add-note"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Complete Retro",
+							"request": {
+								"method": "POST",
+								"header": [
+									{"key": "Content-Type", "value": "application/json"},
+									{"key": "Authorization", "value": "Bearer {{user2Token}}"}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"finalSummary\": \"User 2: Great discussion, we're on the same page now.\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/retrospectives/{{retroId}}/complete",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "retrospectives", "{{retroId}}", "complete"]
+								}
+							}
+						},
+						{
+							"name": "User 2 - Cancel Retro",
+							"request": {
+								"method": "PATCH",
+								"header": [{"key": "Authorization", "value": "Bearer {{user2Token}}"}],
+								"url": {
+									"raw": "{{baseUrl}}/api/retrospectives/{{retroId}}/cancel",
+									"host": ["{{baseUrl}}"],
+									"path": ["api", "retrospectives", "{{retroId}}", "cancel"]
+								}
+							}
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "user1Token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user2Token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user1Id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user2Id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "partnershipId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user1NoteId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user2NoteId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "conflictId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "decisionId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "retroId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
