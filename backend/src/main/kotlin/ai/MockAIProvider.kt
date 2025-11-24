@@ -8,25 +8,60 @@ import me.pavekovt.dto.NoteDTO
  */
 class MockAIProvider : AIProvider {
 
-    override suspend fun summarizeConflict(resolution1: String, resolution2: String): SummaryResult {
+    override suspend fun summarizeConflict(
+        resolution1: String,
+        resolution2: String,
+        partnershipContext: String?
+    ): SummaryResult {
         // Simple mock: combine both resolutions
+        val contextNote = if (partnershipContext != null) {
+            "\n\n[Using historical context from previous ${partnershipContext.length} chars of relationship history]"
+        } else ""
+
         val summary = """
             We decided that both perspectives are valid.
 
             Partner 1 mentioned: "${resolution1.take(100)}${if (resolution1.length > 100) "..." else ""}"
             Partner 2 mentioned: "${resolution2.take(100)}${if (resolution2.length > 100) "..." else ""}"
 
-            Moving forward, we'll work together on this issue.
+            Moving forward, we'll work together on this issue.$contextNote
         """.trimIndent()
 
-        val discrepancies = if (resolution1.lowercase() != resolution2.lowercase()) {
-            listOf("Both partners described the resolution differently - please discuss to align")
-        } else null
+        // Generate mock patterns based on context
+        val patterns = if (partnershipContext != null) {
+            "Based on your relationship history, you both value clear communication. This conflict shows similar themes to past discussions about expectations and boundaries."
+        } else {
+            "This is your first recorded conflict. As you continue working together, patterns will emerge that help us provide better guidance."
+        }
+
+        // Generate mock advice
+        val advice = """
+            1. Schedule a follow-up check-in in one week to ensure the resolution is working
+            2. Consider creating a shared note about expectations to prevent similar conflicts
+            3. Celebrate small wins when you successfully navigate disagreements
+        """.trimIndent()
+
+        // Detect recurring issues (mock)
+        val recurringIssues = if (partnershipContext != null && partnershipContext.contains("communication")) {
+            listOf("Communication expectations", "Response time concerns")
+        } else {
+            emptyList()
+        }
+
+        // Suggest theme tags (mock)
+        val themeTags = listOf("communication", "expectations", "boundaries")
+            .filter { theme ->
+                resolution1.contains(theme, ignoreCase = true) ||
+                resolution2.contains(theme, ignoreCase = true)
+            }
 
         return SummaryResult(
             summary = summary,
-            provider = "mock",
-            discrepancies = discrepancies
+            patterns = patterns,
+            advice = advice,
+            recurringIssues = recurringIssues,
+            themeTags = if (themeTags.isEmpty()) listOf("general") else themeTags,
+            provider = "mock"
         )
     }
 
@@ -50,5 +85,59 @@ class MockAIProvider : AIProvider {
             discussionPoints = discussionPoints,
             provider = "mock"
         )
+    }
+
+    override suspend fun updatePartnershipContext(
+        existingContext: String?,
+        newConflictSummary: String?,
+        newResolutions: Pair<String, String>?,
+        retroSummary: String?,
+        retroNotes: List<String>?
+    ): String {
+        // Mock implementation: create a compacted summary
+        val contextBuilder = StringBuilder()
+
+        // Include existing context
+        if (existingContext != null) {
+            contextBuilder.append(existingContext)
+            contextBuilder.append("\n\n---\n\n")
+        } else {
+            contextBuilder.append("RELATIONSHIP CONTEXT SUMMARY\n\n")
+        }
+
+        // Add conflict info if provided
+        if (newConflictSummary != null && newResolutions != null) {
+            contextBuilder.append("Recent Conflict: Both partners discussed ${extractKeywords(newResolutions.first + " " + newResolutions.second)}. ")
+            contextBuilder.append("Resolution: $newConflictSummary. ")
+        }
+
+        // Add retro info if provided
+        if (retroSummary != null) {
+            contextBuilder.append("Retrospective completed: $retroSummary. ")
+            if (retroNotes != null && retroNotes.isNotEmpty()) {
+                contextBuilder.append("Topics covered: ${extractKeywords(retroNotes.joinToString(" "))}. ")
+            }
+        }
+
+        // Trim to reasonable size (in real implementation, AI would intelligently compress)
+        val result = contextBuilder.toString()
+        return if (result.length > 2000) {
+            // Keep most recent 2000 chars for simplicity in mock
+            result.takeLast(2000)
+        } else {
+            result
+        }
+    }
+
+    private fun extractKeywords(text: String): String {
+        // Simple mock keyword extraction
+        val keywords = text.lowercase()
+            .split(" ")
+            .filter { it.length > 5 }
+            .distinct()
+            .take(5)
+            .joinToString(", ")
+
+        return keywords.ifEmpty { "general topics" }
     }
 }

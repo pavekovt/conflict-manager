@@ -1,18 +1,27 @@
 package me.pavekovt.facade
 
+import me.pavekovt.ai.AIProvider
 import me.pavekovt.dto.AISummaryDTO
 import me.pavekovt.dto.ConflictDTO
 import me.pavekovt.entity.ConflictStatus
+import me.pavekovt.repository.PartnershipContextRepository
+import me.pavekovt.repository.PartnershipRepository
+import me.pavekovt.repository.ResolutionRepository
 import me.pavekovt.service.ConflictService
 import java.util.UUID
 
 /**
  * Facade for conflict resolution operations.
  * Orchestrates conflict workflow and enforces partnership validation.
+ * Manages partnership context for AI-powered relationship advice.
  */
 class ConflictFacade(
     private val conflictService: ConflictService,
-    private val ownershipValidator: OwnershipValidator
+    private val ownershipValidator: OwnershipValidator,
+    private val partnershipRepository: PartnershipRepository,
+    private val partnershipContextRepository: PartnershipContextRepository,
+    private val resolutionRepository: ResolutionRepository,
+    private val aiProvider: AIProvider
 ) {
 
     suspend fun create(userId: UUID): ConflictDTO {
@@ -47,7 +56,37 @@ class ConflictFacade(
         val conflict = findById(conflictId, userId)
             ?: throw IllegalStateException("Conflict not found or you don't have permission")
 
-        return conflictService.submitResolution(conflictId, userId, resolutionText)
+        // Get partnership ID for context
+        val partnershipDTO = partnershipRepository.findActivePartnership(userId)
+        val partnershipContext = if (partnershipDTO != null) {
+            val partnershipId = UUID.fromString(partnershipDTO.id)
+            partnershipContextRepository.getContext(partnershipId)?.compactedSummary
+        } else null
+
+        // Submit resolution with context
+        val result = conflictService.submitResolution(conflictId, userId, resolutionText, partnershipContext)
+
+        // Check if both resolutions are now submitted (AI summary was generated)
+        val bothResolutions = resolutionRepository.getBothResolutions(conflictId)
+        if (bothResolutions != null && partnershipDTO != null) {
+            // AI summary was just generated, update partnership context
+            val partnershipId = UUID.fromString(partnershipDTO.id)
+            val existingContext = partnershipContextRepository.getContext(partnershipId)?.compactedSummary
+
+            val updatedContext = aiProvider.updatePartnershipContext(
+                existingContext = existingContext,
+                newConflictSummary = result.status.name, // We'll use the conflict status for now
+                newResolutions = bothResolutions
+            )
+
+            partnershipContextRepository.upsertContext(
+                partnershipId = partnershipId,
+                compactedSummary = updatedContext,
+                incrementConflictCount = true
+            )
+        }
+
+        return result
     }
 
     suspend fun getSummary(conflictId: UUID, userId: UUID): AISummaryDTO {

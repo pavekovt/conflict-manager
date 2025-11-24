@@ -15,3 +15,11 @@ jwt:
   issuer: confresolv
   audience: all
   realm: main
+
+ai:
+  # AI Provider: "mock" for development, "claude" for production
+  provider: claude
+  # Claude API key (also can be set via CLAUDE_API_KEY environment variable)
+  # apiKey: your-api-key-here
+  # AI model to use (default: claude-3-5-sonnet-20241022)
+  # model: claude-3-5-sonnet-20241022

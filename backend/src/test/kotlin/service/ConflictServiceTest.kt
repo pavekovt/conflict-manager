@@ -203,7 +203,7 @@ class ConflictServiceTest {
         assertEquals(conflict, result)
         coVerify { resolutionRepository.create(conflictId, userId, resolutionText) }
         coVerify { resolutionRepository.getBothResolutions(conflictId) }
-        coVerify(exactly = 0) { aiProvider.summarizeConflict(any(), any()) }
+        coVerify(exactly = 0) { aiProvider.summarizeConflict(any(), any(), any()) }
     }
 
     @Test
@@ -221,6 +221,10 @@ class ConflictServiceTest {
         )
         val summaryResult = SummaryResult(
             summary = "AI generated summary",
+            patterns = "Pattern analysis",
+            advice = "Some advice",
+            recurringIssues = listOf("Issue 1"),
+            themeTags = listOf("communication"),
             provider = "mock-ai"
         )
         val updatedConflict = ConflictDTO(
@@ -236,8 +240,16 @@ class ConflictServiceTest {
         coEvery { resolutionRepository.hasResolution(conflictId, userId) } returns false
         coEvery { resolutionRepository.create(conflictId, userId, resolutionText) } returns createdResolution
         coEvery { resolutionRepository.getBothResolutions(conflictId) } returns Pair(resolution1Text, resolution2Text)
-        coEvery { aiProvider.summarizeConflict(resolution1Text, resolution2Text) } returns summaryResult
-        coEvery { aiSummaryRepository.create(conflictId, summaryResult.summary, summaryResult.provider) } returns summaryId
+        coEvery { aiProvider.summarizeConflict(resolution1Text, resolution2Text, any()) } returns summaryResult
+        coEvery { aiSummaryRepository.create(
+            conflictId,
+            summaryResult.summary,
+            summaryResult.provider,
+            summaryResult.patterns,
+            summaryResult.advice,
+            summaryResult.recurringIssues,
+            summaryResult.themeTags
+        ) } returns summaryId
         coEvery { conflictRepository.updateStatus(conflictId, ConflictStatus.SUMMARY_GENERATED) } returns true
         coEvery { conflictRepository.findById(conflictId) } returns updatedConflict
 
@@ -248,8 +260,16 @@ class ConflictServiceTest {
         assertEquals(updatedConflict, result)
         coVerify { resolutionRepository.create(conflictId, userId, resolutionText) }
         coVerify { resolutionRepository.getBothResolutions(conflictId) }
-        coVerify { aiProvider.summarizeConflict(resolution1Text, resolution2Text) }
-        coVerify { aiSummaryRepository.create(conflictId, summaryResult.summary, summaryResult.provider) }
+        coVerify { aiProvider.summarizeConflict(resolution1Text, resolution2Text, any()) }
+        coVerify { aiSummaryRepository.create(
+            conflictId,
+            summaryResult.summary,
+            summaryResult.provider,
+            summaryResult.patterns,
+            summaryResult.advice,
+            summaryResult.recurringIssues,
+            summaryResult.themeTags
+        ) }
         coVerify { conflictRepository.updateStatus(conflictId, ConflictStatus.SUMMARY_GENERATED) }
     }
 

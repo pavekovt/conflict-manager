@@ -13,11 +13,23 @@ import java.util.UUID
 
 class AISummaryRepositoryImpl : AISummaryRepository {
 
-    override suspend fun create(conflictId: UUID, summaryText: String, provider: String): UUID = dbQuery {
+    override suspend fun create(
+        conflictId: UUID,
+        summaryText: String,
+        provider: String,
+        patterns: String?,
+        advice: String?,
+        recurringIssues: List<String>,
+        themeTags: List<String>
+    ): UUID = dbQuery {
         AISummaries.insertReturning {
             it[AISummaries.conflictId] = conflictId
             it[AISummaries.summaryText] = summaryText
             it[AISummaries.provider] = provider
+            it[AISummaries.patterns] = patterns
+            it[AISummaries.advice] = advice
+            it[AISummaries.recurringIssues] = recurringIssues.joinToString(",")
+            it[AISummaries.themeTags] = themeTags.joinToString(",")
         }
             .single()[AISummaries.id].value
     }
@@ -85,6 +97,10 @@ private fun ResultRow.toAISummaryDTO() = AISummaryDTO(
     id = this[AISummaries.id].value.toString(),
     conflictId = this[AISummaries.conflictId].value.toString(),
     summaryText = this[AISummaries.summaryText],
+    patterns = this[AISummaries.patterns],
+    advice = this[AISummaries.advice],
+    recurringIssues = this[AISummaries.recurringIssues]?.split(",")?.filter { it.isNotBlank() } ?: emptyList(),
+    themeTags = this[AISummaries.themeTags]?.split(",")?.filter { it.isNotBlank() } ?: emptyList(),
     provider = this[AISummaries.provider],
     approvedByMe = false, // Will be set by service layer based on current user
     approvedByPartner = false,
@@ -95,6 +111,10 @@ private fun ResultRow.toAISummaryDTOForUser(currentUserId: UUID, partnerUserId: 
     id = this[AISummaries.id].value.toString(),
     conflictId = this[AISummaries.conflictId].value.toString(),
     summaryText = this[AISummaries.summaryText],
+    patterns = this[AISummaries.patterns],
+    advice = this[AISummaries.advice],
+    recurringIssues = this[AISummaries.recurringIssues]?.split(",")?.filter { it.isNotBlank() } ?: emptyList(),
+    themeTags = this[AISummaries.themeTags]?.split(",")?.filter { it.isNotBlank() } ?: emptyList(),
     provider = this[AISummaries.provider],
     approvedByMe = run {
         val approver1 = this[AISummaries.approvedByUserId1]

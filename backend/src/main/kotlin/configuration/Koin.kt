@@ -1,9 +1,15 @@
 package me.pavekovt.configuration
 
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.config.*
+import kotlinx.serialization.json.Json
 import me.pavekovt.ai.*
 import me.pavekovt.facade.*
+import me.pavekovt.properties.AIProperties
 import me.pavekovt.properties.AuthenticationProperties
 import me.pavekovt.repository.*
 import me.pavekovt.service.*
@@ -43,10 +49,54 @@ fun Application.configureFrameworks() {
                 )
             }
 
+            single<AIProperties> {
+                val config = get<Application>().environment.config
+
+                AIProperties(
+                    provider = System.getenv("AI_PROVIDER")
+                        ?: config.propertyOrNull("ai.provider")?.getString()
+                        ?: "mock",
+                    apiKey = System.getenv("CLAUDE_API_KEY")
+                        ?: config.propertyOrNull("ai.apiKey")?.getString(),
+                    model = System.getenv("AI_MODEL")
+                        ?: config.propertyOrNull("ai.model")?.getString()
+                        ?: "claude-3-5-sonnet-20241022"
+                )
+            }
+
             /**
-             * AI Provider
+             * HTTP Client for AI API calls
              */
-            single<AIProvider> { MockAIProvider() }
+            single<HttpClient> {
+                HttpClient(CIO) {
+                    install(ContentNegotiation) {
+                        json(Json {
+                            ignoreUnknownKeys = true
+                            prettyPrint = true
+                        })
+                    }
+                }
+            }
+
+            /**
+             * AI Provider (switch between Mock and Claude based on config)
+             */
+            single<AIProvider> {
+                val aiProperties = get<AIProperties>()
+                when (aiProperties.provider.lowercase()) {
+                    "claude" -> {
+                        val apiKey = aiProperties.apiKey
+                            ?: throw IllegalStateException("Claude API key not configured. Set CLAUDE_API_KEY environment variable or ai.apiKey in config.")
+                        ClaudeAIProvider(
+                            apiKey = apiKey,
+                            httpClient = get(),
+                            model = aiProperties.model
+                        )
+                    }
+                    "mock" -> MockAIProvider()
+                    else -> throw IllegalStateException("Unknown AI provider: ${aiProperties.provider}. Use 'mock' or 'claude'.")
+                }
+            }
 
             /**
              * Repositories
@@ -59,6 +109,7 @@ fun Application.configureFrameworks() {
             single<DecisionRepository> { DecisionRepositoryImpl() }
             single<RetrospectiveRepository> { RetrospectiveRepositoryImpl() }
             single<PartnershipRepository> { PartnershipRepositoryImpl() }
+            single<PartnershipContextRepository> { PartnershipContextRepositoryImpl() }
 
             /**
              * Services (simplified - no complex business logic)
@@ -81,9 +132,9 @@ fun Application.configureFrameworks() {
              */
             single { PartnershipFacade(get(), get()) }
             single { NoteFacade(get()) }
-            single { ConflictFacade(get(), get()) }
+            single { ConflictFacade(get(), get(), get(), get(), get(), get()) }
             single { DecisionFacade(get(), get()) }
-            single { RetrospectiveFacade(get(), get(), get()) }
+            single { RetrospectiveFacade(get(), get(), get(), get(), get(), get()) }
         })
     }
 }

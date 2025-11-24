@@ -37,6 +37,7 @@ fun Application.configureDatabase() {
             Decisions,
             Retrospectives,
             Partnerships,
+            PartnershipContext,
             RetrospectiveNotes,
             RetrospectiveUsers
         )

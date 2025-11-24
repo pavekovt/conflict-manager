@@ -34,7 +34,8 @@ class ConflictService(
     suspend fun submitResolution(
         conflictId: UUID,
         userId: UUID,
-        resolutionText: String
+        resolutionText: String,
+        partnershipContext: String? = null
     ): ConflictDTO {
         // Check if user already submitted
         if (resolutionRepository.hasResolution(conflictId, userId)) {
@@ -48,14 +49,23 @@ class ConflictService(
         val bothResolutions = resolutionRepository.getBothResolutions(conflictId)
 
         if (bothResolutions != null) {
-            // Generate AI summary
+            // Generate AI summary with historical context
             val summary = aiProvider.summarizeConflict(
                 bothResolutions.first,
-                bothResolutions.second
+                bothResolutions.second,
+                partnershipContext
             )
 
-            // Save summary
-            aiSummaryRepository.create(conflictId, summary.summary, summary.provider)
+            // Save enhanced summary with all fields
+            aiSummaryRepository.create(
+                conflictId = conflictId,
+                summaryText = summary.summary,
+                provider = summary.provider,
+                patterns = summary.patterns,
+                advice = summary.advice,
+                recurringIssues = summary.recurringIssues,
+                themeTags = summary.themeTags
+            )
 
             // Update conflict status
             conflictRepository.updateStatus(conflictId, ConflictStatus.SUMMARY_GENERATED)

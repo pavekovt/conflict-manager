@@ -1,8 +1,11 @@
 package me.pavekovt.facade
 
+import me.pavekovt.ai.AIProvider
 import me.pavekovt.dto.RetrospectiveDTO
 import me.pavekovt.dto.RetrospectiveWithNotesDTO
 import me.pavekovt.entity.NoteStatus
+import me.pavekovt.repository.PartnershipContextRepository
+import me.pavekovt.repository.PartnershipRepository
 import me.pavekovt.service.NoteService
 import me.pavekovt.service.RetrospectiveService
 import java.util.UUID
@@ -10,11 +13,15 @@ import java.util.UUID
 /**
  * Facade for retrospective operations.
  * Orchestrates retrospective workflow and enforces partnership validation.
+ * Updates partnership context after retrospective completion.
  */
 class RetrospectiveFacade(
     private val retrospectiveService: RetrospectiveService,
     private val noteService: NoteService,
-    private val ownershipValidator: OwnershipValidator
+    private val ownershipValidator: OwnershipValidator,
+    private val partnershipRepository: PartnershipRepository,
+    private val partnershipContextRepository: PartnershipContextRepository,
+    private val aiProvider: AIProvider
 ) {
 
     suspend fun create(scheduledDate: String?, currentUserId: UUID): RetrospectiveDTO {
@@ -83,7 +90,33 @@ class RetrospectiveFacade(
             throw IllegalStateException("You don't have access to this retrospective")
         }
 
+        // Get retrospective with notes for context update
+        val retroWithNotes = retrospectiveService.findByIdWithNotes(retroId)
+
+        // Complete the retrospective
         retrospectiveService.complete(retroId, finalSummary)
+
+        // Update partnership context
+        val partnershipDTO = partnershipRepository.findActivePartnership(userId)
+        if (partnershipDTO != null) {
+            val partnershipId = UUID.fromString(partnershipDTO.id)
+            val existingContext = partnershipContextRepository.getContext(partnershipId)?.compactedSummary
+
+            // Extract note contents for context
+            val noteContents = retroWithNotes.notes.map { it.content }
+
+            val updatedContext = aiProvider.updatePartnershipContext(
+                existingContext = existingContext,
+                retroSummary = finalSummary,
+                retroNotes = noteContents
+            )
+
+            partnershipContextRepository.upsertContext(
+                partnershipId = partnershipId,
+                compactedSummary = updatedContext,
+                incrementRetroCount = true
+            )
+        }
     }
 
     suspend fun cancel(retroId: UUID, userId: UUID) {
