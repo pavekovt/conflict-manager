@@ -27,8 +27,8 @@ class ConflictService(
         return conflictRepository.findById(conflictId)
     }
 
-    suspend fun findByUser(userId: UUID): List<ConflictDTO> {
-        return conflictRepository.findByUser(userId)
+    suspend fun findByUser(userId: UUID, partnersIds: List<UUID>): List<ConflictDTO> {
+        return conflictRepository.findByUser(userId, partnersIds)
     }
 
     suspend fun submitResolution(

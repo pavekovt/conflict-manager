@@ -11,17 +11,21 @@ class PartnershipOwnershipValidator(
     private val partnershipRepository: PartnershipRepository
 ) : OwnershipValidator {
 
-    override suspend fun getPartnerId(userId: UUID): UUID {
-        return partnershipRepository.getPartnerId(userId)
+    override suspend fun getCurrentPartnerId(userId: UUID): UUID {
+        return partnershipRepository.getCurrentPartnerId(userId)
             ?: throw IllegalStateException("No active partnership found")
     }
 
-    override suspend fun getPartnerIdOrNull(userId: UUID): UUID? {
-        return partnershipRepository.getPartnerId(userId)
+    override suspend fun getHistoricalPartnerIds(userId: UUID): List<UUID> {
+        return partnershipRepository.getHistoricalPartnerIds(userId)
+    }
+
+    override suspend fun getCurrentPartnerIdOrNull(userId: UUID): UUID? {
+        return partnershipRepository.getCurrentPartnerId(userId)
     }
 
     override suspend fun requirePartnership(userId: UUID): UUID {
-        return partnershipRepository.getPartnerId(userId)
+        return partnershipRepository.getCurrentPartnerId(userId)
             ?: throw IllegalStateException("You must have an active partnership to perform this action")
     }
 
@@ -37,7 +41,7 @@ class PartnershipOwnershipValidator(
             return true
         }
 
-        val partnerId = partnershipRepository.getPartnerId(currentUserId) ?: return false
-        return resourceOwnerId == partnerId
+        val partnerIds = partnershipRepository.getHistoricalPartnerIds(currentUserId)
+        return resourceOwnerId in partnerIds
     }
 }

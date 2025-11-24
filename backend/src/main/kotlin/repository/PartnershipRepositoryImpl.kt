@@ -7,6 +7,7 @@ import me.pavekovt.db.dbQuery
 import me.pavekovt.dto.PartnershipDTO
 import me.pavekovt.entity.Partnerships
 import me.pavekovt.entity.Users
+import me.pavekovt.exception.DuplicateRequestException
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.*
 import java.util.UUID
@@ -23,7 +24,7 @@ class PartnershipRepositoryImpl : PartnershipRepository {
             .singleOrNull()
 
         if (existing != null) {
-            throw IllegalStateException("Partnership request already exists")
+            throw DuplicateRequestException()
         }
 
         Partnerships.insertReturning {
@@ -34,7 +35,7 @@ class PartnershipRepositoryImpl : PartnershipRepository {
         }.single()[Partnerships.id].value
     }
 
-    override suspend fun findById(partnershipId: UUID): PartnershipDTO? = dbQuery {
+    override suspend fun findById(partnershipId: UUID, requester: UUID): PartnershipDTO? = dbQuery {
         val partnership = Partnerships.selectAll()
             .where { Partnerships.id eq partnershipId }
             .singleOrNull() ?: return@dbQuery null
@@ -42,18 +43,20 @@ class PartnershipRepositoryImpl : PartnershipRepository {
         val user1Id = partnership[Partnerships.userId1].value
         val user2Id = partnership[Partnerships.userId2].value
 
+        val partnerId = if (user1Id == requester) user2Id else user1Id
+
         // Get first user
-        val user1Row = Users.selectAll()
-            .where { Users.id eq user1Id }
+        val partnerRow = Users.selectAll()
+            .where { Users.id eq partnerId }
             .singleOrNull() ?: return@dbQuery null
 
         PartnershipDTO(
             id = partnershipId.toString(),
-            partnerId = user2Id.toString(),
-            partnerName = user1Row[Users.name],
-            partnerEmail = user1Row[Users.email],
+            partnerId = partnerRow[Users.id].value.toString(),
+            partnerName = partnerRow[Users.name],
+            partnerEmail = partnerRow[Users.email],
             status = partnership[Partnerships.status],
-            initiatedByMe = partnership[Partnerships.initiatedBy].value == user1Id,
+            initiatedByMe = partnership[Partnerships.initiatedBy].value == requester,
             createdAt = partnership[Partnerships.createdAt].toString(),
             acceptedAt = partnership[Partnerships.acceptedAt]?.toString()
         )
@@ -208,7 +211,7 @@ class PartnershipRepositoryImpl : PartnershipRepository {
         } > 0
     }
 
-    override suspend fun getPartnerId(userId: UUID): UUID? = dbQuery {
+    override suspend fun getCurrentPartnerId(userId: UUID): UUID? = dbQuery {
         val partnership = Partnerships.selectAll()
             .where {
                 ((Partnerships.userId1 eq userId) or (Partnerships.userId2 eq userId)) and
@@ -220,6 +223,18 @@ class PartnershipRepositoryImpl : PartnershipRepository {
         val user2Id = partnership[Partnerships.userId2].value
 
         if (user1Id == userId) user2Id else user1Id
+    }
+
+    override suspend fun getHistoricalPartnerIds(userId: UUID): List<UUID> = dbQuery {
+        val partnerships = Partnerships.selectAll()
+            .where {
+                ((Partnerships.userId1 eq userId) or (Partnerships.userId2 eq userId))
+            }
+            .toList()
+
+        partnerships.map {
+            if (it[Partnerships.userId1] == userId) it[Partnerships.userId2].value else it[Partnerships.userId1].value
+        }
     }
 
     override suspend fun arePartners(userId1: UUID, userId2: UUID): Boolean = dbQuery {

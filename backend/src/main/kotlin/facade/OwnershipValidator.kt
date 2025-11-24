@@ -11,12 +11,14 @@ interface OwnershipValidator {
      * Get the partner ID for a given user.
      * @throws IllegalStateException if user has no active partnership
      */
-    suspend fun getPartnerId(userId: UUID): UUID
+    suspend fun getCurrentPartnerId(userId: UUID): UUID
+
+    suspend fun getHistoricalPartnerIds(userId: UUID): List<UUID>
 
     /**
      * Get the partner ID for a given user, or null if no partnership exists.
      */
-    suspend fun getPartnerIdOrNull(userId: UUID): UUID?
+    suspend fun getCurrentPartnerIdOrNull(userId: UUID): UUID?
 
     /**
      * Require that a user has an active partnership.

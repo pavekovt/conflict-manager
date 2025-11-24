@@ -6,6 +6,7 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import me.pavekovt.dto.exchange.ErrorResponse
 import me.pavekovt.exception.*
+import me.pavekovt.exception.PartnerShipAlreadyExistsException
 
 fun Application.configureStatusPages() {
     install(StatusPages) {
@@ -13,6 +14,20 @@ fun Application.configureStatusPages() {
             call.respond(
                 HttpStatusCode.Conflict,
                 ErrorResponse(cause.message ?: "User already exists")
+            )
+        }
+
+        exception<PartnerShipAlreadyExistsException> { call, cause ->
+            call.respond(
+                HttpStatusCode.Conflict,
+                ErrorResponse(cause.message ?: "User is already in partnership")
+            )
+        }
+
+        exception<DuplicateRequestException> { call, cause ->
+            call.respond(
+                HttpStatusCode.Conflict,
+                ErrorResponse(cause.message ?: "Duplicate request")
             )
         }
 

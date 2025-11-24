@@ -145,14 +145,14 @@ class ConflictServiceTest {
             )
         )
 
-        coEvery { conflictRepository.findByUser(userId) } returns conflicts
+        coEvery { conflictRepository.findByUser(userId, listOf()) } returns conflicts
 
         // When
-        val result = conflictService.findByUser(userId)
+        val result = conflictService.findByUser(userId, listOf())
 
         // Then
         assertEquals(conflicts, result)
-        coVerify { conflictRepository.findByUser(userId) }
+        coVerify { conflictRepository.findByUser(userId, listOf()) }
     }
 
 

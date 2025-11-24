@@ -12,14 +12,14 @@ import java.util.UUID
 class PartnershipService(
     private val partnershipRepository: PartnershipRepository
 ) {
-    suspend fun createInvitation(userId1: UUID, userId2: UUID): PartnershipDTO {
-        val partnershipId = partnershipRepository.create(userId1, userId2, userId1)
-        return partnershipRepository.findById(partnershipId)
+    suspend fun createInvitation(invitator: UUID, invitee: UUID): PartnershipDTO {
+        val partnershipId = partnershipRepository.create(invitator, invitee, invitator)
+        return findById(partnershipId, invitator)
             ?: throw IllegalStateException("Failed to create partnership")
     }
 
-    suspend fun findById(partnershipId: UUID): PartnershipDTO? {
-        return partnershipRepository.findById(partnershipId)
+    suspend fun findById(partnershipId: UUID, requester: UUID): PartnershipDTO? {
+        return partnershipRepository.findById(partnershipId, requester)
     }
 
     suspend fun findActivePartnership(userId: UUID): PartnershipDTO? {

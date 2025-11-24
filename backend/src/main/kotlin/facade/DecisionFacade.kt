@@ -25,14 +25,14 @@ class DecisionFacade(
 
     suspend fun findAll(status: String?, userId: UUID): List<DecisionDTO> {
         // Get user's partner
-        val partnerId = ownershipValidator.getPartnerId(userId)
+        val partnerId = ownershipValidator.getCurrentPartnerId(userId)
 
         // Return decisions for this partnership only
         return decisionService.findByUserAndPartner(userId, partnerId, status)
     }
 
     suspend fun findById(id: UUID, userId: UUID): DecisionDTO {
-        val partnerId = ownershipValidator.getPartnerId(userId)
+        val partnerId = ownershipValidator.getCurrentPartnerId(userId)
 
         // Verify user has access to this decision
         val hasAccess = decisionService.isAccessibleByUser(id, userId, partnerId)
@@ -44,7 +44,7 @@ class DecisionFacade(
     }
 
     suspend fun markReviewed(id: UUID, userId: UUID): DecisionDTO {
-        val partnerId = ownershipValidator.getPartnerId(userId)
+        val partnerId = ownershipValidator.getCurrentPartnerId(userId)
 
         // Verify user has access to this decision
         val hasAccess = decisionService.isAccessibleByUser(id, userId, partnerId)
@@ -56,7 +56,7 @@ class DecisionFacade(
     }
 
     suspend fun archive(id: UUID, userId: UUID): DecisionDTO {
-        val partnerId = ownershipValidator.getPartnerId(userId)
+        val partnerId = ownershipValidator.getCurrentPartnerId(userId)
 
         // Verify user has access to this decision
         val hasAccess = decisionService.isAccessibleByUser(id, userId, partnerId)

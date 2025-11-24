@@ -26,15 +26,14 @@ class ConflictFacade(
 
         // Verify user has access to this conflict (must be partner with initiator)
         val initiatorId = UUID.fromString(conflict.initiatedBy)
-        val partnerId = ownershipValidator.getPartnerId(userId)
-
-        val isInvolved = (userId == initiatorId || partnerId == initiatorId)
-
-        return if (isInvolved) conflict else null
+        if (ownershipValidator.hasAccess(initiatorId, userId)) {
+            return conflict
+        }
+        return null
     }
 
     suspend fun findByUser(userId: UUID): List<ConflictDTO> {
-        return conflictService.findByUser(userId)
+        return conflictService.findByUser(userId, ownershipValidator.getHistoricalPartnerIds(userId))
     }
 
     suspend fun submitResolution(

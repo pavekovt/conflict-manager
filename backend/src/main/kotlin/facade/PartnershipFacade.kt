@@ -3,6 +3,8 @@ package me.pavekovt.facade
 import me.pavekovt.dto.PartnerInviteRequest
 import me.pavekovt.dto.PartnershipDTO
 import me.pavekovt.dto.PartnershipInvitationsDTO
+import me.pavekovt.exception.NotFoundException
+import me.pavekovt.exception.PartnerShipAlreadyExistsException
 import me.pavekovt.service.PartnershipService
 import me.pavekovt.service.UserService
 import java.util.UUID
@@ -19,7 +21,7 @@ class PartnershipFacade(
     suspend fun sendInvitation(request: PartnerInviteRequest, currentUserId: UUID): PartnershipDTO {
         // Find partner by email
         val partner = userService.findByEmail(request.partnerEmail)
-            ?: throw IllegalStateException("User with email ${request.partnerEmail} not found")
+            ?: throw NotFoundException()
 
         val partnerId = UUID.fromString(partner.id)
 
@@ -31,13 +33,13 @@ class PartnershipFacade(
         // Check if user already has an active partnership
         val existingPartnership = partnershipService.findActivePartnership(currentUserId)
         if (existingPartnership != null) {
-            throw IllegalStateException("You already have an active partnership")
+            throw PartnerShipAlreadyExistsException()
         }
 
         // Check if partner already has an active partnership
         val partnerExistingPartnership = partnershipService.findActivePartnership(partnerId)
         if (partnerExistingPartnership != null) {
-            throw IllegalStateException("Partner already has an active partnership")
+            throw PartnerShipAlreadyExistsException()
         }
 
         // Create partnership invitation
@@ -54,22 +56,22 @@ class PartnershipFacade(
         // Check if user already has an active partnership
         val existingPartnership = partnershipService.findActivePartnership(currentUserId)
         if (existingPartnership != null) {
-            throw IllegalStateException("You already have an active partnership")
+            throw PartnerShipAlreadyExistsException()
         }
 
         val success = partnershipService.acceptInvitation(partnershipId, currentUserId)
         if (!success) {
-            throw IllegalStateException("Cannot accept this partnership invitation")
+            throw NotFoundException()
         }
 
-        return partnershipService.findById(partnershipId)
+        return partnershipService.findById(partnershipId, currentUserId)
             ?: throw IllegalStateException("Partnership not found after acceptance")
     }
 
     suspend fun rejectInvitation(partnershipId: UUID, currentUserId: UUID) {
         val success = partnershipService.rejectInvitation(partnershipId, currentUserId)
         if (!success) {
-            throw IllegalStateException("Cannot reject this partnership invitation")
+            throw NotFoundException()
         }
     }
 

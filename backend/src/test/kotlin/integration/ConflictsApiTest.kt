@@ -62,6 +62,37 @@ class ConflictsApiTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `GET conflict by id should return partners conflict details`() = runBlocking {
+        utils.run {
+            // Given
+            val (user1, user2) = utils.registerPartners()
+            val conflict = user1.createConflict()
+
+            // When
+            val response = user2.getConflict(conflict.id)
+
+            // Then
+            assertEquals(response.id, conflict.id)
+        }
+    }
+
+    @Test
+    fun `GET conflict by id should return partners conflicts`() = runBlocking {
+        utils.run {
+            // Given
+            val (user1, user2) = utils.registerPartners()
+            val conflict = user1.createConflict()
+
+            // When
+            val response = user2.getConflicts()
+
+            // Then
+            assertTrue(response.isNotEmpty())
+            assertEquals(conflict.id, response.first().id)
+        }
+    }
+
+    @Test
     fun `POST resolution should submit user's resolution`() = runBlocking {
         utils.run {
             // Given

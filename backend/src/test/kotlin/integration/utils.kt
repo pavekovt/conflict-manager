@@ -20,6 +20,7 @@ import me.pavekovt.dto.DecisionDTO
 import me.pavekovt.dto.NoteDTO
 import me.pavekovt.dto.PartnerInviteRequest
 import me.pavekovt.dto.PartnershipDTO
+import me.pavekovt.dto.PartnershipInvitationsDTO
 import me.pavekovt.dto.RetrospectiveDTO
 import me.pavekovt.dto.RetrospectiveWithNotesDTO
 import me.pavekovt.dto.UserDTO
@@ -43,6 +44,7 @@ data class Partners(
 
 data class TestUser(
     val email: String,
+    val name: String,
     val token: String,
     val id: String,
 )
@@ -63,7 +65,7 @@ open class TestSdkUtils(
         return Pair(user1, user2)
     }
 
-    suspend fun registerUser(email: String = "${UUID.randomUUID()}@test.com", name: String = "Some name"): TestUser {
+    suspend fun registerUser(email: String = "${UUID.randomUUID()}@test.com", name: String = "Some name ${UUID.randomUUID().toString().take(3)}"): TestUser {
         val registerRequest = RegisterRequest(email = email, name = name, password = "password123")
         val response = client.post("$baseUrl/api/auth/register") {
             contentType(ContentType.Application.Json)
@@ -76,20 +78,22 @@ open class TestSdkUtils(
         if (data.user == null) {
             throw IllegalStateException("User is null!")
         }
-        return TestUser(data.user.email, data.token, data.user.id)
+        return TestUser(data.user.email, data.user.name, data.token, data.user.id)
     }
 
     suspend fun TestUser.sendInvite(email: String, expectedStatus: HttpStatusCode = HttpStatusCode.Created): PartnershipDTO {
+        val response = sendInviteRaw(email)
+        assertEquals(expectedStatus, response.status)
+        return response.body<PartnershipDTO>()
+    }
+
+    suspend fun TestUser.sendInviteRaw(email: String): HttpResponse {
         val request = PartnerInviteRequest(email)
-        val response = client.post("$baseUrl/api/partnerships/invite") {
+        return client.post("$baseUrl/api/partnerships/invite") {
             contentType(ContentType.Application.Json)
             setBody(request)
             header(HttpHeaders.Authorization, "Bearer $token")
         }
-
-        assertEquals(expectedStatus, response.status)
-
-        return response.body<PartnershipDTO>()
     }
 
     suspend fun TestUser.createConflict(): ConflictDTO {
@@ -406,16 +410,64 @@ open class TestSdkUtils(
     }
 
     suspend fun TestUser.acceptInvite(id: String): PartnershipDTO {
-        val request = PartnerInviteRequest(email)
-        val response = client.post("$baseUrl/api/partnerships/$id/accept") {
-            contentType(ContentType.Application.Json)
-            setBody(request)
+        val response = acceptInviteRaw(id)
+        assertEquals(HttpStatusCode.OK, response.status)
+        return response.body<PartnershipDTO>()
+    }
+
+    suspend fun TestUser.acceptInviteRaw(id: String): HttpResponse {
+        return client.post("$baseUrl/api/partnerships/$id/accept") {
             header(HttpHeaders.Authorization, "Bearer $token")
         }
+    }
 
+    suspend fun TestUser.rejectInvite(id: String) {
+        val response = rejectInviteRaw(id)
+        assertEquals(HttpStatusCode.NoContent, response.status)
+    }
+
+    suspend fun TestUser.rejectInviteRaw(id: String): HttpResponse {
+        return client.post("$baseUrl/api/partnerships/$id/reject") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+    }
+
+    suspend fun TestUser.getInvitations(): PartnershipInvitationsDTO {
+        val response = getInvitationsRaw()
         assertEquals(HttpStatusCode.OK, response.status)
+        return response.body()
+    }
 
-        return response.body<PartnershipDTO>()
+    suspend fun TestUser.getInvitationsRaw(): HttpResponse {
+        return client.get("$baseUrl/api/partnerships/invitations") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+    }
+
+    suspend fun TestUser.getCurrentPartnership(): PartnershipDTO? {
+        val response = getCurrentPartnershipRaw()
+        return when (response.status) {
+            HttpStatusCode.OK -> response.body<PartnershipDTO>()
+            HttpStatusCode.NotFound -> null
+            else -> throw IllegalStateException("Unexpected status: ${response.status}")
+        }
+    }
+
+    suspend fun TestUser.getCurrentPartnershipRaw(): HttpResponse {
+        return client.get("$baseUrl/api/partnerships/current") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+    }
+
+    suspend fun TestUser.endPartnership() {
+        val response = endPartnershipRaw()
+        assertEquals(HttpStatusCode.NoContent, response.status)
+    }
+
+    suspend fun TestUser.endPartnershipRaw(): HttpResponse {
+        return client.delete("$baseUrl/api/partnerships/current") {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
     }
 }
 

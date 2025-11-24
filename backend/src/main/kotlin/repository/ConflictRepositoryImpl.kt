@@ -5,6 +5,7 @@ import me.pavekovt.dto.ConflictDTO
 import me.pavekovt.entity.*
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.*
 import java.util.UUID
 
@@ -31,33 +32,29 @@ class ConflictRepositoryImpl : ConflictRepository {
             }
     }
 
-    override suspend fun findByUser(userId: UUID): List<ConflictDTO> = dbQuery {
+    override suspend fun findByUser(userId: UUID, partnersIds: List<UUID>): List<ConflictDTO> = dbQuery {
         // Get conflicts where user initiated or has a resolution
-        val conflictIds = Resolutions
-            .selectAll()
-            .where { Resolutions.userId eq userId }
-            .map { it[Resolutions.conflictId].value }
-            .toSet()
-
-        val initiatedIds = Conflicts
+        val initiated = Conflicts
             .selectAll()
             .where { Conflicts.initiatedBy eq userId }
-            .map { it[Conflicts.id].value }
-            .toSet()
+            .map { row ->
+                buildConflictDTO(
+                    row[Conflicts.id].value,
+                    row[Conflicts.initiatedBy].value
+                )
+            }
 
-        val allIds = conflictIds + initiatedIds
+        val partners = Conflicts
+            .selectAll()
+            .where { Conflicts.initiatedBy inList partnersIds }
+            .map { row ->
+                buildConflictDTO(
+                    row[Conflicts.id].value,
+                    row[Conflicts.initiatedBy].value
+                )
+            }
 
-        allIds.mapNotNull { conflictId ->
-            Conflicts.selectAll()
-                .where { Conflicts.id eq conflictId }
-                .singleOrNull()
-                ?.let { row ->
-                    buildConflictDTO(
-                        conflictId = row[Conflicts.id].value,
-                        initiatedBy = row[Conflicts.initiatedBy].value
-                    )
-                }
-        }
+        return@dbQuery initiated + partners
     }
 
     override suspend fun updateStatus(conflictId: UUID, newStatus: ConflictStatus): Boolean = dbQuery {
