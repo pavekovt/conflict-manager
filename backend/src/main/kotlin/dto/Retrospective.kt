@@ -16,7 +16,12 @@ data class RetrospectiveDTO(
     val approvedByUserId2: String?,
     val approvalText1: String?,
     val approvalText2: String?,
-    val createdAt: String
+    val createdAt: String,
+    // UX improvements
+    val myApprovalSubmitted: Boolean = false,
+    val partnerApprovalSubmitted: Boolean = false,
+    val canComplete: Boolean = false,
+    val nextAction: String? = null
 )
 
 @Serializable

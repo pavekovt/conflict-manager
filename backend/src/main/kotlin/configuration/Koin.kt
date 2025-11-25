@@ -117,6 +117,7 @@ fun Application.configureFrameworks() {
             single<PartnershipRepository> { PartnershipRepositoryImpl() }
             single<PartnershipContextRepository> { PartnershipContextRepositoryImpl() }
             single<JobRepository> { JobRepositoryImpl() }
+            single<JournalRepository> { JournalRepositoryImpl() }
 
             /**
              * Services (simplified - no complex business logic)
@@ -128,11 +129,13 @@ fun Application.configureFrameworks() {
             single { ConflictService(get(), get(), get(), get(), get(), get(), get()) }
             single { DecisionService(get()) }
             single { RetrospectiveService(get(), get(), get()) }
+            single { JournalService(get()) }
+            single { JournalContextProcessor(get(), get(), get(), get(), get()) }
 
             /**
              * Background Job Processing (async AI operations)
              */
-            single { JobProcessorService(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+            single { JobProcessorService(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
 
 
             /**
@@ -143,11 +146,12 @@ fun Application.configureFrameworks() {
             /**
              * Facades (orchestrate services and handle business logic)
              */
-            single { PartnershipFacade(get(), get(), get()) }
+            single { PartnershipFacade(get(), get(), get(), get(), get(), get()) }
             single { NoteFacade(get()) }
             single { ConflictFacade(get(), get(), get(), get()) }
             single { DecisionFacade(get(), get()) }
             single { RetrospectiveFacade(get(), get(), get(), get(), get(), get()) }
+            single { JournalFacade(get(), get(), get()) }
         })
     }
 }

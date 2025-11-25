@@ -161,4 +161,12 @@ class ConflictFacade(
 
         conflictService.archive(conflictId)
     }
+
+    suspend fun getAvailableActions(conflictId: UUID, userId: UUID): me.pavekovt.dto.ConflictActionsDTO {
+        // Check if user is involved
+        val conflict = findById(conflictId, userId)
+            ?: throw IllegalStateException("Conflict not found or you don't have permission")
+
+        return conflictService.getAvailableActions(conflictId, userId)
+    }
 }

@@ -111,6 +111,26 @@ class ClaudeAIProvider(
         return response
     }
 
+    override suspend fun updatePartnershipContextWithJournals(
+        existingContext: String?,
+        user1Journals: List<JournalEntryWithTimestamp>,
+        user2Journals: List<JournalEntryWithTimestamp>,
+        user1Profile: UserProfile,
+        user2Profile: UserProfile
+    ): String {
+        val prompt = buildJournalContextUpdatePrompt(
+            existingContext,
+            user1Journals,
+            user2Journals,
+            user1Profile,
+            user2Profile
+        )
+        val response = callClaude(prompt, systemPrompt = JOURNAL_CONTEXT_UPDATE_SYSTEM_PROMPT)
+
+        logger.debug("[updatePartnershipContextWithJournals]: Processed ${user1Journals.size + user2Journals.size} journals")
+        return response
+    }
+
     override fun detectLanguage(text: String): String {
         // Simple heuristic-based language detection
         // For production, consider using a proper library like Apache Tika or cloud API
@@ -316,6 +336,51 @@ class ClaudeAIProvider(
             }
 
             appendLine("Update the partnership context by integrating insights from this retrospective, including both partners' perspectives on the agreement. Keep it concise (max 2000 chars).")
+        }
+    }
+
+    private fun buildJournalContextUpdatePrompt(
+        existingContext: String?,
+        user1Journals: List<JournalEntryWithTimestamp>,
+        user2Journals: List<JournalEntryWithTimestamp>,
+        user1Profile: UserProfile,
+        user2Profile: UserProfile
+    ): String {
+        return buildString {
+            if (existingContext != null) {
+                appendLine("# Existing Relationship Context")
+                appendLine(existingContext)
+                appendLine()
+            } else {
+                appendLine("# Existing Relationship Context")
+                appendLine("(Initial context creation)")
+                appendLine()
+            }
+
+            // User 1's journals
+            if (user1Journals.isNotEmpty()) {
+                appendLine("# ${user1Profile.name}'s Journal Entries")
+                user1Journals.forEachIndexed { index, journal ->
+                    appendLine("Entry ${index + 1} (${journal.completedAt ?: journal.createdAt}):")
+                    appendLine(journal.content)
+                    appendLine()
+                }
+            }
+
+            // User 2's journals
+            if (user2Journals.isNotEmpty()) {
+                appendLine("# ${user2Profile.name}'s Journal Entries")
+                user2Journals.forEachIndexed { index, journal ->
+                    appendLine("Entry ${index + 1} (${journal.completedAt ?: journal.createdAt}):")
+                    appendLine(journal.content)
+                    appendLine()
+                }
+            }
+
+            appendLine("Extract insights from these private journal entries and integrate them into the partnership context.")
+            appendLine("IMPORTANT: Extract themes, patterns, and emotional insights WITHOUT revealing specific private details that shouldn't be shared.")
+            appendLine("Focus on: recurring concerns, emotional patterns, communication needs, and relationship dynamics.")
+            appendLine("Keep it concise (max 2000 chars).")
         }
     }
 
@@ -562,6 +627,28 @@ Focus on:
 - Topics requiring ongoing attention
 
 Keep notes factual, chronological, and therapeutically useful for future sessions with this couple."""
+
+        private const val JOURNAL_CONTEXT_UPDATE_SYSTEM_PROMPT = """You are a therapist maintaining session notes for a couple. You're reviewing their private journal entries.
+
+Your role:
+1. Review previous session notes (existing context)
+2. Extract insights from each partner's private journals
+3. Identify themes, patterns, and emotional dynamics
+4. Update the summary concisely (max 2000 chars)
+
+CRITICAL PRIVACY RULE:
+- These journals are PRIVATE to each individual
+- Extract THEMES and PATTERNS, not specific details
+- Do NOT reveal one partner's private thoughts to the other
+- Focus on observable patterns: emotional states, recurring concerns, relationship dynamics
+
+Focus on:
+- Recurring emotional themes for each person
+- Communication patterns and needs
+- Individual stress factors affecting the relationship
+- Growth areas and relationship dynamics
+
+Keep notes factual, pattern-focused, and therapeutically useful WITHOUT compromising individual privacy."""
     }
 }
 

@@ -65,6 +65,13 @@ fun Route.partnershipRouting() {
                 partnershipFacade.endPartnership(currentUserId)
                 call.respond(HttpStatusCode.NoContent)
             }
+
+            // Get partnership health status (UX enhancement)
+            get("/current/health") {
+                val currentUserId = call.getCurrentUserId()
+                val health = partnershipFacade.getHealth(currentUserId)
+                call.respond(health)
+            }
         }
     }
 }

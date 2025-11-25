@@ -17,3 +17,28 @@ data class JobDTO(
     val completedAt: String?,
     val retryCount: Int
 )
+
+/**
+ * Enhanced job status for user-facing endpoints
+ */
+@Serializable
+data class JobStatusDTO(
+    val id: String,
+    val type: JobType,
+    val status: JobStatus,
+    val progress: Int,  // 0-100 percentage
+    val userMessage: String,
+    val isComplete: Boolean,
+    val isFailed: Boolean,
+    val errorMessage: String? = null,
+    val result: JobResult? = null,
+    val createdAt: String,
+    val estimatedCompletion: String? = null
+)
+
+@Serializable
+data class JobResult(
+    val resourceType: String,  // "conflict", "retrospective", "feelings"
+    val resourceId: String,
+    val actionUrl: String
+)

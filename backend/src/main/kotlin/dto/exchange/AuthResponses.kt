@@ -12,5 +12,9 @@ data class AuthResponse(
 
 @Serializable
 data class ErrorResponse(
-    val error: String
+    val error: String,
+    val code: String? = null,
+    val userAction: String? = null,
+    val retryable: Boolean = false,
+    val supportingData: Map<String, String>? = null
 )

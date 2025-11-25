@@ -118,6 +118,15 @@ fun Route.conflictRouting() {
                 conflictFacade.archive(conflictId, userId)
                 call.respond(mapOf("success" to true))
             }
+
+            // Get available actions for conflict (UX enhancement)
+            get("/{id}/actions") {
+                val userId = call.getCurrentUserId()
+                val conflictId =
+                    UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing conflict ID"))
+                val actions = conflictFacade.getAvailableActions(conflictId, userId)
+                call.respond(actions)
+            }
         }
     }
 }

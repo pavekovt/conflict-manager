@@ -86,10 +86,39 @@ interface AIProvider {
     ): String
 
     /**
+     * Update the compacted partnership context with journal insights.
+     * Called when AI needs context (batch processing unprocessed journals).
+     * Extracts insights without leaking private details to partner.
+     *
+     * @param existingContext Current partnership context
+     * @param user1Journals User 1's unprocessed journal entries (with timestamps)
+     * @param user2Journals User 2's unprocessed journal entries (with timestamps)
+     * @param user1Profile User 1's profile
+     * @param user2Profile User 2's profile
+     */
+    suspend fun updatePartnershipContextWithJournals(
+        existingContext: String?,
+        user1Journals: List<JournalEntryWithTimestamp>,
+        user2Journals: List<JournalEntryWithTimestamp>,
+        user1Profile: UserProfile,
+        user2Profile: UserProfile
+    ): String
+
+    /**
      * Detect language from user input text
      */
     fun detectLanguage(text: String): String
 }
+
+/**
+ * Journal entry with timestamp for AI context
+ */
+@Serializable
+data class JournalEntryWithTimestamp(
+    val content: String,
+    val createdAt: String,
+    val completedAt: String?
+)
 
 /**
  * User profile context for AI interactions

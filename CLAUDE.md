@@ -2,6 +2,7 @@ Concept: Couple's Conflict Resolution Manager with AI-Assisted Retrospectives
 
   Core Features (v1):
   - Private notes system (things that bother you, frustrations, concerns)
+  - **Private journal system** (daily reflections, post-conflict processing, individual thoughts)
   - Feelings-first conflict resolution (process emotions before writing resolutions)
   - AI psychotherapist guidance for processing feelings
   - Conflict resolution tracking (both partners independently write resolutions)
@@ -9,7 +10,7 @@ Concept: Couple's Conflict Resolution Manager with AI-Assisted Retrospectives
   - Decision backlog (track all resolutions as reminders)
   - Retrospective system (scheduled reviews of notes + decisions)
   - Async AI processing with real-time SSE updates
-  - Partnership context maintained across conflicts and retrospectives
+  - Partnership context maintained across conflicts, retrospectives, and journals
 
   Key Goals:
   - Safe space for both partners to express concerns privately
@@ -188,6 +189,15 @@ Concept: Couple's Conflict Resolution Manager with AI-Assisted Retrospectives
   - started_at: TIMESTAMP (nullable)
   - completed_at: TIMESTAMP (nullable)
 
+  **journal_entries** (Private daily reflections)
+  - id: UUID (PK)
+  - user_id: UUID (FK -> users.id, not null)
+  - partnership_id: UUID (FK -> partnerships.id, not null)
+  - content: TEXT (not null) -- Freeform journal entry
+  - status: ENUM (draft, completed, ai_processed, archived) (not null, default 'draft')
+  - created_at: TIMESTAMP (not null, default now())
+  - completed_at: TIMESTAMP (nullable)
+
   ## Data Flow
 
   **Note Creation:**
@@ -221,11 +231,24 @@ Concept: Couple's Conflict Resolution Manager with AI-Assisted Retrospectives
   8. Complete retro with final summary (requires both approvals)
   9. Partnership context updated with insights (sync)
 
+  **Journal Entries (Private Individual Reflections):**
+  1. User creates journal entry (starts as DRAFT)
+  2. User can edit while DRAFT
+  3. User marks complete → status = COMPLETED
+  4. Journal stays PRIVATE (partner cannot see)
+  5. AI processes journals in BATCH when context update needed:
+     - Before feelings processing
+     - Before conflict summarization
+     - Before retrospective discussion points
+  6. AI extracts INSIGHTS without revealing private details
+  7. Journals marked as AI_PROCESSED after context update
+
   **Partnership Context Management:**
   1. **Initial context** created when partnership accepted (user profiles)
   2. **Conflict resolution** updates context asynchronously after approval
   3. **Retrospective completion** updates context synchronously
-  4. Context includes: user profiles, recurring themes, communication patterns, growth areas
+  4. **Journal entries** update context in BATCH (before AI interactions)
+  5. Context includes: user profiles, recurring themes, communication patterns, growth areas, individual emotional patterns
 
   ## Conflict Resolution State Machine
 
@@ -504,8 +527,18 @@ Concept: Couple's Conflict Resolution Manager with AI-Assisted Retrospectives
   1. API endpoint creates job and returns immediately (200 OK)
   2. Job queued in Kotlin Channel
   3. JobProcessorService processes jobs in background
+     - **CRITICAL:** Before each AI call, JournalContextProcessor automatically processes unprocessed journals
+     - This ensures partnership context is always up-to-date with latest journal insights
+     - Journals are batch-processed and marked as AI_PROCESSED
   4. SSE publishes real-time status updates (STARTED, COMPLETED, FAILED, RETRYING)
   5. Clients subscribe to SSE stream for updates
+
+  **Journal Integration in Background Jobs:**
+  - `PROCESS_FEELINGS`: Processes journals before generating AI guidance
+  - `GENERATE_SUMMARY`: Processes journals before creating conflict summary
+  - `GENERATE_DISCUSSION_POINTS`: Processes journals before generating retro points
+  - Journal processing is automatic and transparent to the user
+  - Only COMPLETED journals are processed (batch optimization for tokens)
 
   **Retry Logic:**
   - Failed jobs automatically retry up to 3 times
@@ -532,14 +565,14 @@ Concept: Couple's Conflict Resolution Manager with AI-Assisted Retrospectives
 **Backend Foundation:**
 1. ✅ Ktor project scaffolded with Gradle Kotlin DSL
 2. ✅ Database configuration with Exposed v1 ORM
-3. ✅ Complete database schema (9 tables + 2 junction tables)
+3. ✅ Complete database schema (10 tables + 2 junction tables)
 4. ✅ Custom JWT authentication system
 5. ✅ Authorization middleware with user context
 6. ✅ All entity definitions with proper relationships
-7. ✅ Repository pattern (9 repositories with interfaces)
-8. ✅ Service layer with business logic (6 services)
-9. ✅ Controller layer with REST endpoints (7 controllers)
-10. ✅ Facade layer for business logic orchestration (5 facades)
+7. ✅ Repository pattern (10 repositories with interfaces)
+8. ✅ Service layer with business logic (7 services)
+9. ✅ Controller layer with REST endpoints (8 controllers)
+10. ✅ Facade layer for business logic orchestration (6 facades)
 11. ✅ Global error handling with StatusPages
 12. ✅ Dependency injection with Koin
 13. ✅ Privacy enforcement (users can only access their own data)
@@ -586,20 +619,35 @@ Concept: Couple's Conflict Resolution Manager with AI-Assisted Retrospectives
 42. ✅ Separate AI methods for conflict vs retrospective context updates
 43. ✅ Context includes user profiles, themes, patterns, growth areas
 
+**Journal Entries (Discussion Journal Feature - NEWLY ADDED):**
+44. ✅ JournalEntries entity with state machine (DRAFT, COMPLETED, AI_PROCESSED, ARCHIVED)
+45. ✅ Private journal entries (not visible to partner)
+46. ✅ Full CRUD operations with ownership validation
+47. ✅ JournalContextProcessor for batch processing unprocessed journals
+48. ✅ AI provider method: updatePartnershipContextWithJournals()
+49. ✅ Privacy-preserving AI context extraction (themes/patterns, not specifics)
+50. ✅ **Automatic journal processing integrated into JobProcessorService:**
+    - Before feelings processing (PROCESS_FEELINGS job)
+    - Before conflict summary generation (GENERATE_SUMMARY job)
+    - Before retro discussion points (GENERATE_DISCUSSION_POINTS job)
+51. ✅ Journal API endpoints (7 endpoints: create, get, update, complete, archive, delete, list)
+52. ✅ Dependency injection configured in Koin
+53. ✅ Routes registered in Routing.kt
+
 **AI Providers:**
-44. ✅ AIProvider interface with complete method signatures
-45. ✅ MockAIProvider - fully functional development provider
-46. ✅ ClaudeAIProvider - production provider with Anthropic SDK (Claude Sonnet 4.5)
-47. ✅ All providers support UserProfile context and language parameters
+54. ✅ AIProvider interface with complete method signatures
+55. ✅ MockAIProvider - fully functional development provider
+56. ✅ ClaudeAIProvider - production provider with Anthropic SDK (Claude Sonnet 4.5)
+57. ✅ All providers support UserProfile context and language parameters
 
 **Testing & Documentation:**
-48. ✅ Comprehensive Postman collections:
+58. ✅ Comprehensive Postman collections:
    - Complete API with SSE documentation
    - Dual-user workflow collection with automated setup
    - Realistic conflict scenarios
    - SSE subscription examples
-49. ✅ Unit tests for all services (55 tests passing)
-50. ✅ Build successful with no compilation errors
+59. ✅ Unit tests for all services (55 tests passing)
+60. ✅ Build successful with no compilation errors
 
 ### 📊 Architecture Overview
 
@@ -768,14 +816,14 @@ postman/
 
 ### 📊 Key Metrics
 
-- **Total Backend Files:** 60+ Kotlin files
-- **Lines of Code:** ~8,000+ lines
+- **Total Backend Files:** 65+ Kotlin files
+- **Lines of Code:** ~9,000+ lines
 - **Test Coverage:** 55 unit tests (all services covered)
-- **API Endpoints:** 35+ REST endpoints
-- **Database Tables:** 11 tables (9 main + 2 junction)
-- **AI Methods:** 5 comprehensive methods with full context
+- **API Endpoints:** 42+ REST endpoints (7 journal endpoints added)
+- **Database Tables:** 12 tables (10 main + 2 junction)
+- **AI Methods:** 6 comprehensive methods with full context (journal context update added)
 - **Supported Languages:** 7 languages (auto-detected)
-- **Job Types:** 4 async job types with retry logic
+- **Job Types:** 4 async job types with automatic journal processing
 - **Build Status:** ✅ Successful, no errors
 
 ### 🎉 Major Achievements
@@ -785,8 +833,9 @@ postman/
 3. **AI as Therapist** - Personalized therapeutic guidance using Gottman method and EFT
 4. **Async Processing** - Non-blocking AI operations with real-time SSE updates
 5. **Partnership Context** - Relationship history maintained and utilized by AI
-6. **Multilingual Support** - Automatic language detection and localized responses
-7. **Privacy-First Design** - Comprehensive access controls and data isolation
-8. **Production-Ready** - Comprehensive error handling, retry logic, and testing
+6. **Discussion Journal** - Private journaling with automatic AI context integration
+7. **Multilingual Support** - Automatic language detection and localized responses
+8. **Privacy-First Design** - Comprehensive access controls and data isolation
+9. **Production-Ready** - Comprehensive error handling, retry logic, and testing
 
 **The backend is feature-complete and ready for frontend development!** 🚀

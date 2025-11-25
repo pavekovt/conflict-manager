@@ -18,7 +18,10 @@ import java.util.UUID
 class PartnershipFacade(
     private val partnershipService: PartnershipService,
     private val userService: UserService,
-    private val partnershipContextRepository: PartnershipContextRepository
+    private val partnershipContextRepository: PartnershipContextRepository,
+    private val conflictRepository: me.pavekovt.repository.ConflictRepository,
+    private val retrospectiveRepository: me.pavekovt.repository.RetrospectiveRepository,
+    private val decisionRepository: me.pavekovt.repository.DecisionRepository
 ) {
 
     suspend fun sendInvitation(request: PartnerInviteRequest, currentUserId: UUID): PartnershipDTO {
@@ -119,5 +122,88 @@ class PartnershipFacade(
 
     suspend fun endPartnership(currentUserId: UUID) {
         partnershipService.endPartnership(currentUserId)
+    }
+
+    suspend fun getHealth(currentUserId: UUID): me.pavekovt.dto.PartnershipHealthDTO {
+        val partnership = partnershipService.findActivePartnership(currentUserId)
+
+        if (partnership == null) {
+            return me.pavekovt.dto.PartnershipHealthDTO(
+                isActive = false,
+                partnerName = null,
+                needsAttention = listOf("No active partnership"),
+                suggestions = listOf("Invite your partner to start using the app together"),
+                stats = me.pavekovt.dto.PartnershipStats(
+                    totalConflictsResolved = 0,
+                    retrospectivesCompleted = 0,
+                    activeConflicts = 0,
+                    daysSinceLastRetrospective = null,
+                    unreviewedDecisions = 0
+                )
+            )
+        }
+
+        val partnerId = UUID.fromString(partnership.partnerId)
+        val partner = userService.findById(partnerId)
+
+        // Get partner IDs for queries
+        val partnerIds = listOf(partnerId)
+
+        // Get conflict stats
+        val allConflicts = conflictRepository.findByUser(currentUserId, partnerIds)
+        val resolvedConflicts = allConflicts.count {
+            it.status == me.pavekovt.entity.ConflictStatus.APPROVED
+        }
+        val activeConflicts = allConflicts.count {
+            it.status !in listOf(
+                me.pavekovt.entity.ConflictStatus.APPROVED,
+                me.pavekovt.entity.ConflictStatus.ARCHIVED
+            )
+        }
+
+        // Get retrospective stats
+        val retrospectives = retrospectiveRepository.findByUser(currentUserId)
+        val completedRetros = retrospectives.count {
+            it.status == me.pavekovt.entity.RetroStatus.COMPLETED.name.lowercase()
+        }
+
+        // Get decision stats
+        val decisions = decisionRepository.findAll(null)
+        val unreviewedDecisions = decisions.count { it.status == "active" }
+
+        // Build needs attention list
+        val needsAttention = mutableListOf<String>()
+        if (activeConflicts > 0) {
+            needsAttention.add("$activeConflicts active ${if (activeConflicts == 1) "conflict" else "conflicts"}")
+        }
+        if (unreviewedDecisions > 0) {
+            needsAttention.add("$unreviewedDecisions unreviewed ${if (unreviewedDecisions == 1) "decision" else "decisions"}")
+        }
+
+        // Build suggestions
+        val suggestions = mutableListOf<String>()
+        if (activeConflicts == 0 && completedRetros == 0) {
+            suggestions.add("Start by creating notes about things you'd like to discuss")
+        }
+        if (completedRetros == 0) {
+            suggestions.add("Schedule your first retrospective to review notes together")
+        }
+        if (unreviewedDecisions > 3) {
+            suggestions.add("Review your decision backlog to stay aligned")
+        }
+
+        return me.pavekovt.dto.PartnershipHealthDTO(
+            isActive = true,
+            partnerName = partner?.name,
+            needsAttention = needsAttention.ifEmpty { listOf("Everything looks good!") },
+            suggestions = suggestions.ifEmpty { listOf("Keep up the great communication!") },
+            stats = me.pavekovt.dto.PartnershipStats(
+                totalConflictsResolved = resolvedConflicts,
+                retrospectivesCompleted = completedRetros,
+                activeConflicts = activeConflicts,
+                daysSinceLastRetrospective = null,  // TODO: Calculate from last completed retro
+                unreviewedDecisions = unreviewedDecisions
+            )
+        )
     }
 }

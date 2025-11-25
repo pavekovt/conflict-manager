@@ -246,6 +246,50 @@ class MockAIProvider : AIProvider {
         }
     }
 
+    override suspend fun updatePartnershipContextWithJournals(
+        existingContext: String?,
+        user1Journals: List<JournalEntryWithTimestamp>,
+        user2Journals: List<JournalEntryWithTimestamp>,
+        user1Profile: UserProfile,
+        user2Profile: UserProfile
+    ): String {
+        val contextBuilder = StringBuilder()
+
+        // Include existing context
+        if (existingContext != null) {
+            contextBuilder.append(existingContext)
+            contextBuilder.append("\n\n---\n\n")
+        }
+
+        // Extract insights from user 1's journals
+        if (user1Journals.isNotEmpty()) {
+            contextBuilder.append("${user1Profile.name}'s recent reflections:\n")
+            val insights = user1Journals.take(3).map { journal ->
+                "- ${journal.createdAt}: ${journal.content.take(150)}"
+            }
+            contextBuilder.append(insights.joinToString("\n"))
+            contextBuilder.append("\n\n")
+        }
+
+        // Extract insights from user 2's journals
+        if (user2Journals.isNotEmpty()) {
+            contextBuilder.append("${user2Profile.name}'s recent reflections:\n")
+            val insights = user2Journals.take(3).map { journal ->
+                "- ${journal.createdAt}: ${journal.content.take(150)}"
+            }
+            contextBuilder.append(insights.joinToString("\n"))
+            contextBuilder.append("\n")
+        }
+
+        // Trim to reasonable size
+        val result = contextBuilder.toString()
+        return if (result.length > 2000) {
+            result.takeLast(2000)
+        } else {
+            result
+        }
+    }
+
     override fun detectLanguage(text: String): String {
         // Simple mock detection - matches basic patterns
         return when {

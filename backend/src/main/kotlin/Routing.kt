@@ -16,6 +16,9 @@ fun Application.configureRouting() {
             conflictRouting()
             decisionRouting()
             retrospectiveRouting()
+            journalRouting()
+            jobRouting()
+            dashboardRouting()
             eventsRoutes()
         }
     }

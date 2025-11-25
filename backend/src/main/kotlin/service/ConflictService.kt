@@ -175,4 +175,193 @@ class ConflictService(
     suspend fun archive(conflictId: UUID) {
         conflictRepository.updateStatus(conflictId, ConflictStatus.ARCHIVED)
     }
+
+    suspend fun getAvailableActions(conflictId: UUID, userId: UUID): me.pavekovt.dto.ConflictActionsDTO {
+        val conflict = conflictRepository.findById(conflictId)
+            ?: throw IllegalStateException("Conflict not found")
+
+        // Get feelings info
+        val myFeelings = conflictFeelingsRepository.findByConflictAndUser(conflictId, userId)
+        val myFeelingsProcessed = myFeelings.count {
+            it.status == me.pavekovt.entity.ConflictFeelingsStatus.COMPLETED
+        }
+
+        val partnerFeelings = conflictFeelingsRepository.findByConflict(conflictId)
+            .filter { it.userId != userId.toString() }
+        val partnerFeelingsCount = partnerFeelings.size
+        val partnerFeelingsProcessed = partnerFeelings.count {
+            it.status == me.pavekovt.entity.ConflictFeelingsStatus.COMPLETED
+        }
+
+        // Get resolution info
+        val myResolution = resolutionRepository.hasResolution(conflictId, userId)
+        val resolutions = resolutionRepository.findByConflict(conflictId)
+        val partnerResolution = resolutions.any { it.userId != userId.toString() }
+
+        // Get summary approval info
+        val summary = if (conflict.summaryAvailable) {
+            val resolutionsList = resolutionRepository.findByConflict(conflictId)
+            val partnerUserId = resolutionsList.firstOrNull { it.userId != userId.toString() }?.let {
+                UUID.fromString(it.userId)
+            }
+            if (partnerUserId != null) {
+                aiSummaryRepository.findByConflictForUser(conflictId, userId, partnerUserId)
+            } else {
+                aiSummaryRepository.findByConflict(conflictId)
+            }
+        } else null
+
+        val mySummaryApproval = summary?.approvedByMe ?: false
+
+        // Build available actions list
+        val actions = mutableListOf<me.pavekovt.dto.ActionAvailability>()
+
+        // Determine what actions are available
+        when (conflict.status) {
+            ConflictStatus.PENDING_FEELINGS, ConflictStatus.PROCESSING_FEELINGS -> {
+                actions.add(
+                    me.pavekovt.dto.ActionAvailability(
+                        action = me.pavekovt.dto.ConflictAction.SUBMIT_FEELINGS,
+                        enabled = true,
+                        reason = null
+                    )
+                )
+                actions.add(
+                    me.pavekovt.dto.ActionAvailability(
+                        action = me.pavekovt.dto.ConflictAction.VIEW_FEELINGS,
+                        enabled = myFeelings.isNotEmpty(),
+                        reason = if (myFeelings.isEmpty()) "You haven't submitted any feelings yet" else null
+                    )
+                )
+                actions.add(
+                    me.pavekovt.dto.ActionAvailability(
+                        action = me.pavekovt.dto.ConflictAction.SUBMIT_RESOLUTION,
+                        enabled = false,
+                        reason = "You must submit and process feelings first"
+                    )
+                )
+            }
+            ConflictStatus.PENDING_RESOLUTIONS -> {
+                actions.add(
+                    me.pavekovt.dto.ActionAvailability(
+                        action = me.pavekovt.dto.ConflictAction.VIEW_FEELINGS,
+                        enabled = true,
+                        reason = null
+                    )
+                )
+                actions.add(
+                    me.pavekovt.dto.ActionAvailability(
+                        action = me.pavekovt.dto.ConflictAction.SUBMIT_RESOLUTION,
+                        enabled = !myResolution,
+                        reason = if (myResolution) "You've already submitted your resolution" else null
+                    )
+                )
+            }
+            ConflictStatus.PROCESSING_SUMMARY -> {
+                actions.add(
+                    me.pavekovt.dto.ActionAvailability(
+                        action = me.pavekovt.dto.ConflictAction.VIEW_SUMMARY,
+                        enabled = false,
+                        reason = "AI is still generating the summary"
+                    )
+                )
+            }
+            ConflictStatus.SUMMARY_GENERATED, ConflictStatus.REFINEMENT -> {
+                actions.add(
+                    me.pavekovt.dto.ActionAvailability(
+                        action = me.pavekovt.dto.ConflictAction.VIEW_SUMMARY,
+                        enabled = true,
+                        reason = null
+                    )
+                )
+                actions.add(
+                    me.pavekovt.dto.ActionAvailability(
+                        action = me.pavekovt.dto.ConflictAction.APPROVE_SUMMARY,
+                        enabled = !mySummaryApproval,
+                        reason = if (mySummaryApproval) "You've already approved the summary" else null
+                    )
+                )
+                actions.add(
+                    me.pavekovt.dto.ActionAvailability(
+                        action = me.pavekovt.dto.ConflictAction.REQUEST_REFINEMENT,
+                        enabled = true,
+                        reason = null
+                    )
+                )
+            }
+            else -> {
+                // No actions available for APPROVED or ARCHIVED
+            }
+        }
+
+        // Archive is always available unless already archived
+        if (conflict.status != ConflictStatus.ARCHIVED) {
+            actions.add(
+                me.pavekovt.dto.ActionAvailability(
+                    action = me.pavekovt.dto.ConflictAction.ARCHIVE,
+                    enabled = true,
+                    reason = null
+                )
+            )
+        }
+
+        // Build progress info
+        val progress = me.pavekovt.dto.ConflictProgress(
+            myProgress = me.pavekovt.dto.UserProgress(
+                feelingsSubmitted = myFeelings.size,
+                feelingsProcessed = myFeelingsProcessed,
+                resolutionSubmitted = myResolution,
+                summaryApproved = mySummaryApproval
+            ),
+            partnerProgress = me.pavekovt.dto.UserProgress(
+                feelingsSubmitted = partnerFeelingsCount,
+                feelingsProcessed = partnerFeelingsProcessed,
+                resolutionSubmitted = partnerResolution,
+                summaryApproved = false  // TODO: Get partner approval status
+            )
+        )
+
+        // Build next steps
+        val nextSteps = mutableListOf<String>()
+        when (conflict.status) {
+            ConflictStatus.PENDING_FEELINGS -> {
+                if (myFeelings.isEmpty()) {
+                    nextSteps.add("Submit your feelings about this conflict")
+                } else if (myFeelingsProcessed < myFeelings.size) {
+                    nextSteps.add("Wait for AI to process your feelings")
+                }
+                if (partnerFeelingsCount == 0) {
+                    nextSteps.add("Your partner needs to submit their feelings")
+                }
+            }
+            ConflictStatus.PENDING_RESOLUTIONS -> {
+                if (!myResolution) {
+                    nextSteps.add("Review AI guidance and submit your resolution")
+                } else if (!partnerResolution) {
+                    nextSteps.add("Wait for your partner to submit their resolution")
+                }
+            }
+            ConflictStatus.PROCESSING_SUMMARY -> {
+                nextSteps.add("Wait for AI to generate the summary")
+            }
+            ConflictStatus.SUMMARY_GENERATED, ConflictStatus.REFINEMENT -> {
+                if (!mySummaryApproval) {
+                    nextSteps.add("Review and approve the AI-generated summary")
+                } else {
+                    nextSteps.add("Wait for your partner to approve the summary")
+                }
+            }
+            ConflictStatus.APPROVED -> {
+                nextSteps.add("Conflict resolved! Check your decision backlog")
+            }
+            else -> {}
+        }
+
+        return me.pavekovt.dto.ConflictActionsDTO(
+            availableActions = actions,
+            currentPhase = conflict.status.name,
+            progress = progress,
+            nextSteps = nextSteps
+        )
+    }
 }

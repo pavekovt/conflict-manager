@@ -13,7 +13,10 @@ data class ConflictFeelingsDTO(
     val aiGuidance: String?,
     val suggestedResolution: String?,
     val emotionalTone: String?,
-    val submittedAt: String
+    val submittedAt: String,
+    // Privacy UX
+    val visibleToPartner: Boolean = false,
+    val visibilityReason: String? = null
 )
 
 @Serializable

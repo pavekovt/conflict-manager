@@ -17,6 +17,7 @@ interface RetrospectiveRepository {
     suspend fun addUser(retroId: UUID, userId: UUID): Boolean
     suspend fun addNote(retroId: UUID, noteId: UUID): Boolean
     suspend fun getNotesForRetrospective(retroId: UUID): List<NoteDTO>
+    suspend fun getUsersForRetrospective(retroId: UUID): List<UUID>
     suspend fun setDiscussionPoints(retroId: UUID, discussionPoints: String): Boolean
     suspend fun updateDiscussionPoints(retroId: UUID, discussionPoints: String): Boolean
     suspend fun updateStatus(retroId: UUID, status: RetroStatus): Boolean

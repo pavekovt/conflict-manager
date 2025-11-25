@@ -31,7 +31,8 @@ class JobProcessorService(
     private val userRepository: UserRepository,
     private val partnershipRepository: PartnershipRepository,
     private val partnershipContextRepository: PartnershipContextRepository,
-    private val aiProvider: AIProvider
+    private val aiProvider: AIProvider,
+    private val journalContextProcessor: JournalContextProcessor
 ) {
     private val logger = LoggerFactory.getLogger(JobProcessorService::class.java)
     private val jobChannel = Channel<UUID>(Channel.UNLIMITED)
@@ -219,6 +220,13 @@ class JobProcessorService(
             description = partner.description
         )
 
+        // Process unprocessed journals to update partnership context before AI call
+        val partnership = partnershipRepository.findActivePartnership(userId)
+        if (partnership != null) {
+            val partnershipId = UUID.fromString(partnership.id)
+            journalContextProcessor.processUnprocessedJournals(partnershipId, userId)
+        }
+
         // Call AI with full context
         val aiResponse = aiProvider.processFeelingsAndSuggestResolution(
             userFeelings = feeling.feelingsText,
@@ -286,6 +294,10 @@ class JobProcessorService(
         val partnership = partnershipRepository.findActivePartnership(user1Id)
         val partnershipContext = if (partnership != null) {
             val partnershipId = UUID.fromString(partnership.id)
+
+            // Process unprocessed journals to update partnership context before AI call
+            journalContextProcessor.processUnprocessedJournals(partnershipId, user1Id)
+
             partnershipContextRepository.getContext(partnershipId)?.compactedSummary
         } else null
 
@@ -327,6 +339,18 @@ class JobProcessorService(
 
         // Get notes included in this retro
         val notes = retrospectiveRepository.getNotesForRetrospective(retroId)
+
+        // Process unprocessed journals before generating discussion points
+        // We need to get userId from retrospective_users to process journals
+        val retroUsers = retrospectiveRepository.getUsersForRetrospective(retroId)
+        if (retroUsers.isNotEmpty()) {
+            val firstUserId = retroUsers[0]
+            val partnership = partnershipRepository.findActivePartnership(firstUserId)
+            if (partnership != null) {
+                val partnershipId = UUID.fromString(partnership.id)
+                journalContextProcessor.processUnprocessedJournals(partnershipId, firstUserId)
+            }
+        }
 
         // Call AI to generate discussion points
         val discussionPointsResult = aiProvider.generateRetroPoints(notes)

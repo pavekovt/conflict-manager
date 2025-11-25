@@ -148,6 +148,12 @@ class RetrospectiveRepositoryImpl : RetrospectiveRepository {
             .map { it.toNoteDTO() }
     }
 
+    override suspend fun getUsersForRetrospective(retroId: UUID): List<UUID> = dbQuery {
+        RetrospectiveUsers.selectAll()
+            .where { RetrospectiveUsers.retrospectiveId eq retroId }
+            .map { it[RetrospectiveUsers.userId].value }
+    }
+
     override suspend fun updateDiscussionPoints(retroId: UUID, discussionPoints: String): Boolean = dbQuery {
         Retrospectives.update({ Retrospectives.id eq retroId }) {
             it[aiDiscussionPoints] = discussionPoints
