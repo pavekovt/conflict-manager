@@ -3,6 +3,7 @@ package me.pavekovt.integration
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 import me.pavekovt.entity.ConflictStatus
+import me.pavekovt.integration.dsl.testApi
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -12,6 +13,20 @@ class ConflictsApiTest : IntegrationTestBase() {
 
     @Test
     fun `POST conflicts should create a new conflict`() = runBlocking {
+        testApi(baseUrl, client) {
+            partnership {
+                users {
+                    user1.conflict {
+                        assertState {
+                            hasStatus(ConflictStatus.PENDING_FEELINGS)
+                            myResolutionSubmitted(false)
+                            partnerResolutionSubmitted(false)
+                            summaryAvailable(false)
+                        }
+                    }
+                }
+            }
+        }
         utils.run {
             // Given
             val (user) = utils.registerPartners()
