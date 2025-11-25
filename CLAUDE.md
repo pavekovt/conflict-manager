@@ -156,9 +156,13 @@ Concept: Couple's Conflict Resolution Manager with AI-Assisted Retrospectives
   - scheduled_date: TIMESTAMP (nullable) -- null if manually triggered
   - started_at: TIMESTAMP (not null, default now())
   - completed_at: TIMESTAMP (nullable)
-  - status: ENUM (scheduled, in_progress, completed, cancelled) (not null)
-  - ai_discussion_points: TEXT (nullable)
+  - status: ENUM (scheduled, in_progress, processing_discussion_points, pending_approval, completed, cancelled) (not null)
+  - ai_discussion_points: TEXT (nullable) -- JSON array of discussion points
   - final_summary: TEXT (nullable)
+  - approved_by_user_id_1: UUID (nullable)
+  - approved_by_user_id_2: UUID (nullable)
+  - approval_text_1: TEXT (nullable) -- User 1's explanation for approval
+  - approval_text_2: TEXT (nullable) -- User 2's explanation for approval
   - created_at: TIMESTAMP (not null, default now())
 
   **retrospective_users** (junction table)
@@ -211,10 +215,11 @@ Concept: Couple's Conflict Resolution Manager with AI-Assisted Retrospectives
   2. Pulls all pending notes from both partners
   3. Shows decision backlog for review
   4. AI generates discussion points from notes (async)
-  5. Partners discuss together
-  6. Mark notes as resolved/ongoing
-  7. Complete retro with final summary
-  8. Partnership context updated with insights (sync)
+  5. Both partners review and approve discussion points
+  6. Partners discuss together
+  7. Mark notes as resolved/ongoing
+  8. Complete retro with final summary (requires both approvals)
+  9. Partnership context updated with insights (sync)
 
   **Partnership Context Management:**
   1. **Initial context** created when partnership accepted (user profiles)
@@ -247,6 +252,33 @@ Concept: Couple's Conflict Resolution Manager with AI-Assisted Retrospectives
   - Cannot generate AI summary until both resolutions exist
   - Both approvals required to create decision
   - Refinement can happen multiple times before approval
+
+  ## Retrospective Workflow & State Machine
+
+  **States:**
+  1. SCHEDULED - Retrospective scheduled for future date
+  2. IN_PROGRESS - Retrospective started, notes being added
+  3. PROCESSING_DISCUSSION_POINTS - AI generating discussion points in background
+  4. PENDING_APPROVAL - Discussion points generated, waiting for both partners to approve
+  5. COMPLETED - Both partners approved and retrospective finalized with summary
+  6. CANCELLED - Retrospective cancelled (manual action)
+
+  **State Transitions:**
+  - SCHEDULED → IN_PROGRESS (when started manually or automatically)
+  - IN_PROGRESS → PROCESSING_DISCUSSION_POINTS (when generate-points called, async)
+  - PROCESSING_DISCUSSION_POINTS → PENDING_APPROVAL (when AI completes generation)
+  - PENDING_APPROVAL → COMPLETED (when both partners approve AND complete endpoint called)
+  - Any state → CANCELLED (manual cancellation)
+
+  **Business Rules:**
+  - Both partners must add notes before generating discussion points
+  - Discussion points are returned as structured JSON array (List<DiscussionPoint>)
+  - Both partners must approve discussion points before completing retrospective
+  - Each partner must provide approval text explaining their perspective/agreement
+  - Approval texts help partners come to agreement and provide AI with context for future interactions
+  - Completion requires both approvals AND calling complete endpoint with final summary
+  - All notes in retrospective are marked as "discussed" upon completion
+  - Partnership context is updated synchronously after completion with approval texts included
 
   ## API Endpoints (Complete)
 
@@ -295,11 +327,12 @@ Concept: Couple's Conflict Resolution Manager with AI-Assisted Retrospectives
   **Retrospectives:**
   - POST /api/retrospectives - trigger manual retro
   - GET /api/retrospectives - list retrospectives
-  - GET /api/retrospectives/:id - get retro details
+  - GET /api/retrospectives/:id - get retro details (includes approval texts)
   - GET /api/retrospectives/:id/notes - get notes included in this retro
   - POST /api/retrospectives/:id/notes - add note to retro
   - POST /api/retrospectives/:id/generate-points - generate discussion points (async)
-  - POST /api/retrospectives/:id/complete - finalize retro with summary
+  - PATCH /api/retrospectives/:id/approve - approve discussion points with explanation text (body: { approvalText: string })
+  - POST /api/retrospectives/:id/complete - finalize retro with summary (requires both approvals)
   - PATCH /api/retrospectives/:id/cancel - cancel scheduled retro
 
   **Server-Sent Events (SSE):**
@@ -359,7 +392,9 @@ Concept: Couple's Conflict Resolution Manager with AI-Assisted Retrospectives
       suspend fun updatePartnershipContextWithRetrospective(
           existingContext: String?,
           retroSummary: String,
-          retroNotes: List<String>
+          retroNotes: List<String>,
+          approvalText1: String? = null,
+          approvalText2: String? = null
       ): String
 
       // Detect language from user input

@@ -210,7 +210,9 @@ class MockAIProvider : AIProvider {
     override suspend fun updatePartnershipContextWithRetrospective(
         existingContext: String?,
         retroSummary: String,
-        retroNotes: List<String>
+        retroNotes: List<String>,
+        approvalText1: String?,
+        approvalText2: String?
     ): String {
         val contextBuilder = StringBuilder()
 
@@ -222,7 +224,18 @@ class MockAIProvider : AIProvider {
 
         // Add retrospective summary
         contextBuilder.append("Retrospective completed: $retroSummary\n")
-        contextBuilder.append("Key topics discussed: ${retroNotes.take(3).joinToString(", ") { it.take(50) }}")
+        contextBuilder.append("Key topics discussed: ${retroNotes.take(3).joinToString(", ") { it.take(50) }}\n")
+
+        // Include approval texts if provided
+        if (approvalText1 != null || approvalText2 != null) {
+            contextBuilder.append("Partners' agreement perspectives:\n")
+            if (approvalText1 != null) {
+                contextBuilder.append("  Partner 1: ${approvalText1.take(100)}\n")
+            }
+            if (approvalText2 != null) {
+                contextBuilder.append("  Partner 2: ${approvalText2.take(100)}\n")
+            }
+        }
 
         // Trim to reasonable size
         val result = contextBuilder.toString()

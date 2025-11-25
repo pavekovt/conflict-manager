@@ -12,7 +12,8 @@
       "Bash(timeout 90 ./gradlew test:*)",
       "Bash(xargs:*)",
       "Bash(cat:*)",
-      "Bash(..gradlew compileKotlin)"
+      "Bash(..gradlew compileKotlin)",
+      "Bash(chmod:*)"
     ],
     "deny": [],
     "ask": []

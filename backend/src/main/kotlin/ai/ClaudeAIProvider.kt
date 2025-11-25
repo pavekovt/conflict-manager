@@ -100,9 +100,11 @@ class ClaudeAIProvider(
     override suspend fun updatePartnershipContextWithRetrospective(
         existingContext: String?,
         retroSummary: String,
-        retroNotes: List<String>
+        retroNotes: List<String>,
+        approvalText1: String?,
+        approvalText2: String?
     ): String {
-        val prompt = buildRetroContextUpdatePrompt(existingContext, retroSummary, retroNotes)
+        val prompt = buildRetroContextUpdatePrompt(existingContext, retroSummary, retroNotes, approvalText1, approvalText2)
         val response = callClaude(prompt, systemPrompt = RETRO_CONTEXT_UPDATE_SYSTEM_PROMPT)
 
         logger.debug("[updatePartnershipContextWithRetrospective]: ${response.take(50)}")
@@ -274,7 +276,9 @@ class ClaudeAIProvider(
     private fun buildRetroContextUpdatePrompt(
         existingContext: String?,
         retroSummary: String,
-        retroNotes: List<String>
+        retroNotes: List<String>,
+        approvalText1: String?,
+        approvalText2: String?
     ): String {
         return buildString {
             if (existingContext != null) {
@@ -299,7 +303,19 @@ class ClaudeAIProvider(
                 appendLine()
             }
 
-            appendLine("Update the partnership context by integrating insights from this retrospective. Keep it concise (max 2000 chars).")
+            // Include approval texts if provided
+            if (approvalText1 != null || approvalText2 != null) {
+                appendLine("# Partners' Agreement Perspectives")
+                if (approvalText1 != null) {
+                    appendLine("Partner 1: $approvalText1")
+                }
+                if (approvalText2 != null) {
+                    appendLine("Partner 2: $approvalText2")
+                }
+                appendLine()
+            }
+
+            appendLine("Update the partnership context by integrating insights from this retrospective, including both partners' perspectives on the agreement. Keep it concise (max 2000 chars).")
         }
     }
 

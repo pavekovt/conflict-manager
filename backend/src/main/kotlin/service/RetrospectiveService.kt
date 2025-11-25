@@ -71,9 +71,28 @@ class RetrospectiveService(
         val discussionPointsJson = Json.encodeToString(result.discussionPoints)
 
         retrospectiveRepository.setDiscussionPoints(retroId, discussionPointsJson)
+
+        // Update status to PENDING_APPROVAL
+        retrospectiveRepository.updateStatus(retroId, RetroStatus.PENDING_APPROVAL)
+    }
+
+    suspend fun approve(retroId: UUID, userId: UUID, approvalText: String) {
+        require(approvalText.isNotBlank()) { "Approval text cannot be blank" }
+
+        // Approve by this user with their explanation
+        retrospectiveRepository.approve(retroId, userId, approvalText)
+    }
+
+    suspend fun isApprovedByBoth(retroId: UUID): Boolean {
+        return retrospectiveRepository.isApprovedByBoth(retroId)
     }
 
     suspend fun complete(retroId: UUID, finalSummary: String) {
+        // Verify both users approved before allowing completion
+        if (!retrospectiveRepository.isApprovedByBoth(retroId)) {
+            throw IllegalStateException("Cannot complete retrospective - both users must approve first")
+        }
+
         val success = retrospectiveRepository.complete(retroId, finalSummary)
         if (!success) {
             throw IllegalStateException("Retrospective not found")

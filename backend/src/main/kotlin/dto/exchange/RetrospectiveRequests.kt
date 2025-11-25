@@ -14,6 +14,11 @@ data class AddNoteToRetroRequest(
 )
 
 @Serializable
+data class ApproveRetrospectiveRequest(
+    val approvalText: String
+)
+
+@Serializable
 data class CompleteRetrospectiveRequest(
     val finalSummary: String
 )

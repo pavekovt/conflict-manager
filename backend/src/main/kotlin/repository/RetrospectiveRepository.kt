@@ -20,6 +20,8 @@ interface RetrospectiveRepository {
     suspend fun setDiscussionPoints(retroId: UUID, discussionPoints: String): Boolean
     suspend fun updateDiscussionPoints(retroId: UUID, discussionPoints: String): Boolean
     suspend fun updateStatus(retroId: UUID, status: RetroStatus): Boolean
+    suspend fun approve(retroId: UUID, userId: UUID, approvalText: String): Boolean
+    suspend fun isApprovedByBoth(retroId: UUID): Boolean
     suspend fun complete(retroId: UUID, summary: String): Boolean
     suspend fun cancel(retroId: UUID): Boolean
 }

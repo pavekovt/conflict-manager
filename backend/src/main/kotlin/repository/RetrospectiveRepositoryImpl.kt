@@ -1,5 +1,8 @@
 package me.pavekovt.repository
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.decodeFromString
+import me.pavekovt.ai.DiscussionPoint
 import me.pavekovt.db.dbQuery
 import me.pavekovt.dto.NoteDTO
 import me.pavekovt.dto.RetrospectiveDTO
@@ -62,6 +65,10 @@ class RetrospectiveRepositoryImpl : RetrospectiveRepository {
             status = retro.status,
             aiDiscussionPoints = retro.aiDiscussionPoints,
             finalSummary = retro.finalSummary,
+            approvedByUserId1 = retro.approvedByUserId1,
+            approvedByUserId2 = retro.approvedByUserId2,
+            approvalText1 = retro.approvalText1,
+            approvalText2 = retro.approvalText2,
             notes = notes,
             createdAt = retro.createdAt
         )
@@ -152,6 +159,46 @@ class RetrospectiveRepositoryImpl : RetrospectiveRepository {
             it[Retrospectives.status] = status
         } > 0
     }
+
+    override suspend fun approve(retroId: UUID, userId: UUID, approvalText: String): Boolean = dbQuery {
+        val retro = Retrospectives.selectAll()
+            .where { Retrospectives.id eq retroId }
+            .singleOrNull() ?: return@dbQuery false
+
+        val currentApprover1 = retro[Retrospectives.approvedByUserId1]
+        val currentApprover2 = retro[Retrospectives.approvedByUserId2]
+
+        // Check if user already approved
+        if (currentApprover1 == userId || currentApprover2 == userId) {
+            return@dbQuery false // Already approved
+        }
+
+        // Add userId and approval text to first available slot
+        Retrospectives.update({ Retrospectives.id eq retroId }) {
+            when {
+                currentApprover1 == null -> {
+                    it[approvedByUserId1] = userId
+                    it[Retrospectives.approvalText1] = approvalText
+                }
+                currentApprover2 == null -> {
+                    it[approvedByUserId2] = userId
+                    it[Retrospectives.approvalText2] = approvalText
+                }
+                else -> return@update // Both slots full (shouldn't happen in 2-person retro)
+            }
+        }
+        true
+    }
+
+    override suspend fun isApprovedByBoth(retroId: UUID): Boolean = dbQuery {
+        Retrospectives.selectAll()
+            .where { Retrospectives.id eq retroId }
+            .singleOrNull()
+            ?.let { row ->
+                row[Retrospectives.approvedByUserId1] != null &&
+                row[Retrospectives.approvedByUserId2] != null
+            } ?: false
+    }
 }
 
 private fun ResultRow.toRetrospectiveDTO() = RetrospectiveDTO(
@@ -160,8 +207,18 @@ private fun ResultRow.toRetrospectiveDTO() = RetrospectiveDTO(
     startedAt = this[Retrospectives.startedAt].toString(),
     completedAt = this[Retrospectives.completedAt]?.toString(),
     status = this[Retrospectives.status].name.lowercase(),
-    aiDiscussionPoints = this[Retrospectives.aiDiscussionPoints],
+    aiDiscussionPoints = this[Retrospectives.aiDiscussionPoints]?.let { json ->
+        try {
+            Json.decodeFromString<List<DiscussionPoint>>(json)
+        } catch (e: Exception) {
+            null
+        }
+    },
     finalSummary = this[Retrospectives.finalSummary],
+    approvedByUserId1 = this[Retrospectives.approvedByUserId1]?.toString(),
+    approvedByUserId2 = this[Retrospectives.approvedByUserId2]?.toString(),
+    approvalText1 = this[Retrospectives.approvalText1],
+    approvalText2 = this[Retrospectives.approvalText2],
     createdAt = this[Retrospectives.createdAt].toString()
 )
 

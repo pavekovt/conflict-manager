@@ -82,6 +82,15 @@ class RetrospectiveFacade(
         retrospectiveService.generateDiscussionPoints(retroId)
     }
 
+    suspend fun approve(retroId: UUID, userId: UUID, approvalText: String) {
+        // Verify user has access
+        if (!retrospectiveService.userHasAccess(retroId, userId)) {
+            throw IllegalStateException("You don't have access to this retrospective")
+        }
+
+        retrospectiveService.approve(retroId, userId, approvalText)
+    }
+
     suspend fun complete(retroId: UUID, finalSummary: String, userId: UUID) {
         require(finalSummary.isNotBlank()) { "Final summary cannot be blank" }
 
@@ -108,7 +117,9 @@ class RetrospectiveFacade(
             val updatedContext = aiProvider.updatePartnershipContextWithRetrospective(
                 existingContext = existingContext,
                 retroSummary = finalSummary,
-                retroNotes = noteContents
+                retroNotes = noteContents,
+                approvalText1 = retroWithNotes.approvalText1,
+                approvalText2 = retroWithNotes.approvalText2
             )
 
             partnershipContextRepository.upsertContext(

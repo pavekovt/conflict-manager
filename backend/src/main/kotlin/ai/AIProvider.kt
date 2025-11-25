@@ -74,11 +74,15 @@ interface AIProvider {
      * @param existingContext Current partnership context
      * @param retroSummary The retrospective final summary
      * @param retroNotes Notes discussed in the retrospective
+     * @param approvalText1 User 1's approval explanation (nullable)
+     * @param approvalText2 User 2's approval explanation (nullable)
      */
     suspend fun updatePartnershipContextWithRetrospective(
         existingContext: String?,
         retroSummary: String,
-        retroNotes: List<String>
+        retroNotes: List<String>,
+        approvalText1: String? = null,
+        approvalText2: String? = null
     ): String
 
     /**

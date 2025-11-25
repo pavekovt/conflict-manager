@@ -69,6 +69,16 @@ fun Route.retrospectiveRouting() {
                 call.respond(mapOf("success" to true))
             }
 
+            // Approve retrospective discussion points
+            patch("/{id}/approve") {
+                val userId = call.getCurrentUserId()
+                val retroId =
+                    UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("Missing retrospective ID"))
+                val request = call.receive<ApproveRetrospectiveRequest>()
+                retroFacade.approve(retroId, userId, request.approvalText)
+                call.respond(mapOf("success" to true))
+            }
+
             // Complete retrospective
             post("/{id}/complete") {
                 val userId = call.getCurrentUserId()
