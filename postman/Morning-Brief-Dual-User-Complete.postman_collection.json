@@ -1,0 +1,1299 @@
+{
+	"info": {
+		"_postman_id": "dual-user-complete-workflow",
+		"name": "Morning Brief - Dual User Complete Workflow",
+		"description": "Complete dual-user workflow for testing partnerships, conflicts, feelings, and async AI processing with SSE.\n\n## Quick Start:\n1. Run 'Setup' folder to create both users and partnership\n2. Use 'User 1' or 'User 2' folders to act as that user\n3. Monitor SSE in 'Events' folder for async job updates\n4. Follow the numbered workflow folders for typical scenarios",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "user1_email",
+			"value": "sarah@example.com",
+			"type": "string"
+		},
+		{
+			"key": "user1_name",
+			"value": "Sarah",
+			"type": "string"
+		},
+		{
+			"key": "user1_password",
+			"value": "password123",
+			"type": "string"
+		},
+		{
+			"key": "user1_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user1_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user2_email",
+			"value": "mike@example.com",
+			"type": "string"
+		},
+		{
+			"key": "user2_name",
+			"value": "Mike",
+			"type": "string"
+		},
+		{
+			"key": "user2_password",
+			"value": "password123",
+			"type": "string"
+		},
+		{
+			"key": "user2_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user2_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "partnershipId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "conflictId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user1_feelingId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user2_feelingId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user1_noteId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user2_noteId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "retroId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "summaryId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "0️⃣ Setup (Run First)",
+			"item": [
+				{
+					"name": "1. Register User 1 (Sarah)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('user1_token', jsonData.accessToken);",
+									"    pm.collectionVariables.set('user1_id', jsonData.user.id);",
+									"    console.log('✅ Sarah registered. Token saved.');",
+									"} else {",
+									"    console.log('⚠️ Registration failed. User might already exist - try login instead.');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{user1_email}}\",\n    \"name\": \"{{user1_name}}\",\n    \"password\": \"{{user1_password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "register"]
+						}
+					}
+				},
+				{
+					"name": "2. Register User 2 (Mike)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('user2_token', jsonData.accessToken);",
+									"    pm.collectionVariables.set('user2_id', jsonData.user.id);",
+									"    console.log('✅ Mike registered. Token saved.');",
+									"} else {",
+									"    console.log('⚠️ Registration failed. User might already exist - try login instead.');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{user2_email}}\",\n    \"name\": \"{{user2_name}}\",\n    \"password\": \"{{user2_password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "register"]
+						}
+					}
+				},
+				{
+					"name": "3. Sarah Updates Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    console.log('✅ Sarah\\'s profile updated. AI will use this info.');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Sarah\",\n    \"age\": 28,\n    \"gender\": \"female\",\n    \"description\": \"I'm a teacher who values clear communication. I process emotions by talking things through and need quality time to feel connected.\",\n    \"preferredLanguage\": \"en\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users/profile",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users", "profile"]
+						}
+					}
+				},
+				{
+					"name": "4. Mike Updates Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    console.log('✅ Mike\\'s profile updated. AI will use this info.');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user2_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Mike\",\n    \"age\": 30,\n    \"gender\": \"male\",\n    \"description\": \"I'm a software engineer who values independence and problem-solving. I tend to process emotions internally before discussing them.\",\n    \"preferredLanguage\": \"en\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users/profile",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users", "profile"]
+						}
+					}
+				},
+				{
+					"name": "5. Sarah Invites Mike",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('partnershipId', jsonData.id);",
+									"    console.log('✅ Partnership invitation sent. ID: ' + jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"partnerEmail\": \"{{user2_email}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/partnerships/invite",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "partnerships", "invite"]
+						}
+					}
+				},
+				{
+					"name": "6. Mike Accepts Invitation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    console.log('✅ Partnership accepted! Initial context created with user profiles.');",
+									"    console.log('🎉 Setup complete! You can now test conflict workflows.');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user2_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/partnerships/{{partnershipId}}/accept",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "partnerships", "{{partnershipId}}", "accept"]
+						}
+					}
+				}
+			],
+			"description": "Run these requests in order to set up both users and create a partnership"
+		},
+		{
+			"name": "🔄 Quick Login (If Users Exist)",
+			"item": [
+				{
+					"name": "Login as Sarah",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('user1_token', jsonData.accessToken);",
+									"    pm.collectionVariables.set('user1_id', jsonData.user.id);",
+									"    console.log('✅ Logged in as Sarah');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{user1_email}}\",\n    \"password\": \"{{user1_password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Login as Mike",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('user2_token', jsonData.accessToken);",
+									"    pm.collectionVariables.set('user2_id', jsonData.user.id);",
+									"    console.log('✅ Logged in as Mike');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{user2_email}}\",\n    \"password\": \"{{user2_password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "login"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "1️⃣ Conflict Resolution Flow",
+			"item": [
+				{
+					"name": "1. Sarah Creates Conflict",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('conflictId', jsonData.id);",
+									"    console.log('✅ Conflict created. ID: ' + jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/conflicts",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "conflicts"]
+						}
+					}
+				},
+				{
+					"name": "2. Sarah Submits Feelings (Async)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('user1_feelingId', jsonData.id);",
+									"    console.log('✅ Sarah\\'s feelings submitted. Status: ' + jsonData.status);",
+									"    console.log('🔄 AI is processing... Monitor SSE for completion');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"feelingsText\": \"I'm feeling really hurt and frustrated. We had plans to have a quiet dinner together tonight, but you cancelled last minute to go out with your friends. I feel like I'm not a priority anymore. We barely spend quality time together, and when we do have plans, something else always seems to be more important.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/conflicts/{{conflictId}}/feelings",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "conflicts", "{{conflictId}}", "feelings"]
+						}
+					}
+				},
+				{
+					"name": "3. Mike Submits Feelings (Async)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('user2_feelingId', jsonData.id);",
+									"    console.log('✅ Mike\\'s feelings submitted. Status: ' + jsonData.status);",
+									"    console.log('🔄 AI is processing... Monitor SSE for completion');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user2_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"feelingsText\": \"I feel guilty about cancelling dinner, but I also feel pressured. I've been stressed with work and needed to decompress with my friends. I feel like I can't have any space without disappointing you. I want to spend time together, but I also need time for myself.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/conflicts/{{conflictId}}/feelings",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "conflicts", "{{conflictId}}", "feelings"]
+						}
+					}
+				},
+				{
+					"name": "4. Check Sarah's Feelings Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/conflicts/{{conflictId}}/feelings",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "conflicts", "{{conflictId}}", "feelings"]
+						},
+						"description": "Check if AI has completed processing Sarah's feelings. Look for status: COMPLETED and aiGuidance."
+					}
+				},
+				{
+					"name": "5. Sarah Submits Resolution",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"resolutionText\": \"We agreed to set aside dedicated time each week for just the two of us - Wednesday evenings and Sunday afternoons. We'll protect this time and only reschedule if absolutely necessary, with at least 24 hours notice. Mike also agreed to communicate his need for space earlier, so we can plan around it together.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/conflicts/{{conflictId}}/resolutions",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "conflicts", "{{conflictId}}", "resolutions"]
+						}
+					}
+				},
+				{
+					"name": "6. Mike Submits Resolution",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"console.log('✅ Both resolutions submitted!');",
+									"console.log('🔄 AI is generating summary... Monitor SSE for completion');",
+									"console.log('Then check \"Get Conflict Summary\" to see the result');"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user2_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"resolutionText\": \"We agreed that I'll honor our planned time together and let Sarah know in advance if I need personal time. We set aside Wednesday nights and Sunday afternoons for quality time. I'll communicate better when I'm feeling overwhelmed so we can work it out together instead of me just cancelling plans.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/conflicts/{{conflictId}}/resolutions",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "conflicts", "{{conflictId}}", "resolutions"]
+						}
+					}
+				},
+				{
+					"name": "7. Get Conflict Summary",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('summaryId', jsonData.id);",
+									"    console.log('✅ Summary generated by AI therapist');",
+									"    console.log('Next: Both users should approve the summary');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/conflicts/{{conflictId}}/summary",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "conflicts", "{{conflictId}}", "summary"]
+						}
+					}
+				},
+				{
+					"name": "8. Sarah Approves Summary",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/conflicts/{{conflictId}}/approve",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "conflicts", "{{conflictId}}", "approve"]
+						}
+					}
+				},
+				{
+					"name": "9. Mike Approves Summary",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"console.log('✅ Both partners approved!');",
+									"console.log('🔄 Decision created and partnership context updating (async)');",
+									"console.log('Check \"List Decisions\" to see the new decision');"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user2_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/conflicts/{{conflictId}}/approve",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "conflicts", "{{conflictId}}", "approve"]
+						}
+					}
+				}
+			],
+			"description": "Complete conflict resolution workflow from feelings to approved decision"
+		},
+		{
+			"name": "2️⃣ Retrospective Flow",
+			"item": [
+				{
+					"name": "1. Sarah Creates Private Note",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('user1_noteId', jsonData.id);",
+									"    console.log('✅ Sarah\\'s note created. ID: ' + jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"content\": \"I've been feeling disconnected lately. Even when we spend time together, Mike is often on his phone. I want more present, meaningful interactions.\",\n    \"mood\": \"concerned\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/notes",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "notes"]
+						}
+					}
+				},
+				{
+					"name": "2. Mike Creates Private Note",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('user2_noteId', jsonData.id);",
+									"    console.log('✅ Mike\\'s note created. ID: ' + jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user2_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"content\": \"I feel like Sarah wants all my attention all the time. I need some downtime to decompress, but she takes it personally when I'm on my phone.\",\n    \"mood\": \"frustrated\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/notes",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "notes"]
+						}
+					}
+				},
+				{
+					"name": "3. Sarah Marks Note Ready",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"ready_for_discussion\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/notes/{{user1_noteId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "notes", "{{user1_noteId}}"]
+						}
+					}
+				},
+				{
+					"name": "4. Mike Marks Note Ready",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user2_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"ready_for_discussion\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/notes/{{user2_noteId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "notes", "{{user2_noteId}}"]
+						}
+					}
+				},
+				{
+					"name": "5. Sarah Creates Retrospective",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('retroId', jsonData.id);",
+									"    console.log('✅ Retrospective created. ID: ' + jsonData.id);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/retrospectives",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "retrospectives"]
+						}
+					}
+				},
+				{
+					"name": "6. Add Sarah's Note to Retro",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"noteId\": \"{{user1_noteId}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/retrospectives/{{retroId}}/notes",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "retrospectives", "{{retroId}}", "notes"]
+						}
+					}
+				},
+				{
+					"name": "7. Add Mike's Note to Retro",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user2_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"noteId\": \"{{user2_noteId}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/retrospectives/{{retroId}}/notes",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "retrospectives", "{{retroId}}", "notes"]
+						}
+					}
+				},
+				{
+					"name": "8. Generate Discussion Points (Async)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"console.log('🔄 AI is generating discussion points...');",
+									"console.log('Monitor SSE for completion, then GET retrospective details');"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/retrospectives/{{retroId}}/generate-points",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "retrospectives", "{{retroId}}", "generate-points"]
+						}
+					}
+				},
+				{
+					"name": "9. Get Retro with Notes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/retrospectives/{{retroId}}/notes",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "retrospectives", "{{retroId}}", "notes"]
+						}
+					}
+				},
+				{
+					"name": "10. Complete Retrospective",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"console.log('✅ Retrospective completed!');",
+									"console.log('Partnership context updated with insights');"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"finalSummary\": \"We discussed our need for both connection and personal space. We agreed to be more present during our quality time (phones away) and to clearly communicate when we need downtime. Mike will give Sarah a heads up when he needs to decompress, and Sarah will respect that boundary. We both feel heard and understood.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/retrospectives/{{retroId}}/complete",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "retrospectives", "{{retroId}}", "complete"]
+						}
+					}
+				}
+			],
+			"description": "Complete retrospective workflow from notes to completion"
+		},
+		{
+			"name": "📡 Server-Sent Events (SSE)",
+			"item": [
+				{
+					"name": "Subscribe to Events (Sarah)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "text/event-stream",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/events",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "events"]
+						},
+						"description": "SSE endpoint for real-time job updates.\n\n⚠️ NOTE: Postman doesn't display SSE properly. Use one of these instead:\n\n**Browser Console:**\n```javascript\nconst es = new EventSource('http://localhost:8080/api/events', {\n  headers: { 'Authorization': 'Bearer YOUR_TOKEN' }\n});\nes.onmessage = (e) => console.log('Event:', JSON.parse(e.data));\n```\n\n**curl:**\n```bash\ncurl -N -H \"Authorization: Bearer YOUR_TOKEN\" http://localhost:8080/api/events\n```\n\n**Events:**\n- JOB_STARTED: AI processing started\n- JOB_COMPLETED: AI processing completed\n- JOB_FAILED: AI processing failed\n- JOB_RETRYING: Retrying after failure"
+					}
+				},
+				{
+					"name": "Subscribe to Events (Mike)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user2_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "text/event-stream",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/events",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "events"]
+						},
+						"description": "SSE endpoint for Mike. See Sarah's SSE request for usage notes."
+					}
+				}
+			],
+			"description": "Monitor async job processing in real-time"
+		},
+		{
+			"name": "👤 User 1 (Sarah)",
+			"item": [
+				{
+					"name": "Get My Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/profile",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Get Current Partnership",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/partnerships/current",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "partnerships", "current"]
+						}
+					}
+				},
+				{
+					"name": "List My Conflicts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/conflicts",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "conflicts"]
+						}
+					}
+				},
+				{
+					"name": "List My Notes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/notes",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "notes"]
+						}
+					}
+				},
+				{
+					"name": "List Decisions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/decisions",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "decisions"]
+						}
+					}
+				},
+				{
+					"name": "List Retrospectives",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user1_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/retrospectives",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "retrospectives"]
+						}
+					}
+				}
+			],
+			"description": "All requests from Sarah's perspective"
+		},
+		{
+			"name": "👤 User 2 (Mike)",
+			"item": [
+				{
+					"name": "Get My Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user2_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/profile",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "users", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Get Current Partnership",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user2_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/partnerships/current",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "partnerships", "current"]
+						}
+					}
+				},
+				{
+					"name": "List My Conflicts",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user2_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/conflicts",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "conflicts"]
+						}
+					}
+				},
+				{
+					"name": "List My Notes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user2_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/notes",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "notes"]
+						}
+					}
+				},
+				{
+					"name": "List Decisions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user2_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/decisions",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "decisions"]
+						}
+					}
+				},
+				{
+					"name": "List Retrospectives",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{user2_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/retrospectives",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "retrospectives"]
+						}
+					}
+				}
+			],
+			"description": "All requests from Mike's perspective"
+		}
+	]
+}

@@ -132,7 +132,7 @@ fun Application.configureFrameworks() {
             /**
              * Background Job Processing (async AI operations)
              */
-            single { JobProcessorService(get(), get(), get(), get(), get(), get(), get()) }
+            single { JobProcessorService(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
 
 
             /**
@@ -143,7 +143,7 @@ fun Application.configureFrameworks() {
             /**
              * Facades (orchestrate services and handle business logic)
              */
-            single { PartnershipFacade(get(), get()) }
+            single { PartnershipFacade(get(), get(), get()) }
             single { NoteFacade(get()) }
             single { ConflictFacade(get(), get(), get(), get()) }
             single { DecisionFacade(get(), get()) }

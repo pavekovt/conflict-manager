@@ -105,7 +105,7 @@ class RetrospectiveFacade(
             // Extract note contents for context
             val noteContents = retroWithNotes.notes.map { it.content }
 
-            val updatedContext = aiProvider.updatePartnershipContext(
+            val updatedContext = aiProvider.updatePartnershipContextWithRetrospective(
                 existingContext = existingContext,
                 retroSummary = finalSummary,
                 retroNotes = noteContents

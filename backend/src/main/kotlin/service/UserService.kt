@@ -6,7 +6,7 @@ import java.util.UUID
 
 /**
  * Simple service for user-related operations.
- * Handles basic user data retrieval.
+ * Handles basic user data retrieval and profile updates.
  */
 class UserService(
     private val userRepository: UserRepository
@@ -17,5 +17,16 @@ class UserService(
 
     suspend fun findById(userId: UUID): UserDTO? {
         return userRepository.findById(userId)
+    }
+
+    suspend fun updateProfile(
+        userId: UUID,
+        name: String?,
+        age: Int?,
+        gender: String?,
+        description: String?,
+    ): UserDTO {
+        return userRepository.updateProfile(userId, name, age, gender, description)
+            ?: throw IllegalStateException("User not found")
     }
 }

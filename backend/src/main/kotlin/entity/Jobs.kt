@@ -21,9 +21,10 @@ object Jobs : UUIDTable("jobs") {
 }
 
 enum class JobType {
-    PROCESS_FEELINGS,       // Process user feelings and generate AI guidance
-    GENERATE_SUMMARY,       // Generate conflict resolution summary from both resolutions
-    GENERATE_DISCUSSION_POINTS  // Generate retrospective discussion points
+    PROCESS_FEELINGS,              // Process user feelings and generate AI guidance
+    GENERATE_SUMMARY,              // Generate conflict resolution summary from both resolutions
+    GENERATE_DISCUSSION_POINTS,    // Generate retrospective discussion points
+    UPDATE_PARTNERSHIP_CONTEXT     // Update partnership context after conflict resolution
 }
 
 enum class JobStatus {

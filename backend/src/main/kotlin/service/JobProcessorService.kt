@@ -28,6 +28,9 @@ class JobProcessorService(
     private val resolutionRepository: ResolutionRepository,
     private val aiSummaryRepository: AISummaryRepository,
     private val retrospectiveRepository: RetrospectiveRepository,
+    private val userRepository: UserRepository,
+    private val partnershipRepository: PartnershipRepository,
+    private val partnershipContextRepository: PartnershipContextRepository,
     private val aiProvider: AIProvider
 ) {
     private val logger = LoggerFactory.getLogger(JobProcessorService::class.java)
@@ -116,6 +119,7 @@ class JobProcessorService(
                 JobType.PROCESS_FEELINGS -> processFeelingsJob(jobId, UUID.fromString(job.entityId), job.payload)
                 JobType.GENERATE_SUMMARY -> generateSummaryJob(jobId, UUID.fromString(job.entityId))
                 JobType.GENERATE_DISCUSSION_POINTS -> generateDiscussionPointsJob(jobId, UUID.fromString(job.entityId))
+                JobType.UPDATE_PARTNERSHIP_CONTEXT -> updatePartnershipContextJob(jobId, UUID.fromString(job.entityId), job.payload)
             }
 
             jobRepository.markAsCompleted(jobId)
@@ -180,10 +184,49 @@ class JobProcessorService(
             }
         }
 
-        // Call AI with context
+        // Detect language from user input
+        val detectedLanguage = aiProvider.detectLanguage(feeling.feelingsText)
+
+        // Get user profiles for AI context
+        val userId = UUID.fromString(feeling.userId)
+        val user = userRepository.findById(userId)
+            ?: throw IllegalStateException("User $userId not found")
+
+        // Get partner from conflict
+        val initiatorId = UUID.fromString(conflict.initiatedBy)
+        val partnerId = if (initiatorId == userId) {
+            // Find partner from partnership
+            val partnership = partnershipRepository.findActivePartnership(userId)
+            UUID.fromString(partnership?.partnerId ?: throw IllegalStateException("No active partnership"))
+        } else {
+            initiatorId
+        }
+
+        val partner = userRepository.findById(partnerId)
+            ?: throw IllegalStateException("Partner $partnerId not found")
+
+        val userProfile = me.pavekovt.ai.UserProfile(
+            name = user.name,
+            age = user.age,
+            gender = user.gender,
+            description = user.description
+        )
+
+        val partnerProfile = me.pavekovt.ai.UserProfile(
+            name = partner.name,
+            age = partner.age,
+            gender = partner.gender,
+            description = partner.description
+        )
+
+        // Call AI with full context
         val aiResponse = aiProvider.processFeelingsAndSuggestResolution(
-            userFeelings = "$contextText\n\n${feeling.feelingsText}",
-            partnershipContext = partnershipContext
+            userFeelings = feeling.feelingsText,
+            userProfile = userProfile,
+            partnerProfile = partnerProfile,
+            partnershipContext = partnershipContext,
+            previousFeelings = previousFeelings.map { it.feelingsText },
+            detectedLanguage = detectedLanguage
         )
 
         // Update feeling with AI response
@@ -216,10 +259,47 @@ class JobProcessorService(
         val resolution1 = resolutions[0]
         val resolution2 = resolutions[1]
 
+        // Get user profiles
+        val user1Id = UUID.fromString(resolution1.userId)
+        val user2Id = UUID.fromString(resolution2.userId)
+
+        val user1 = userRepository.findById(user1Id)
+            ?: throw IllegalStateException("User $user1Id not found")
+        val user2 = userRepository.findById(user2Id)
+            ?: throw IllegalStateException("User $user2Id not found")
+
+        val user1Profile = me.pavekovt.ai.UserProfile(
+            name = user1.name,
+            age = user1.age,
+            gender = user1.gender,
+            description = user1.description
+        )
+
+        val user2Profile = me.pavekovt.ai.UserProfile(
+            name = user2.name,
+            age = user2.age,
+            gender = user2.gender,
+            description = user2.description
+        )
+
+        // Get partnership context
+        val partnership = partnershipRepository.findActivePartnership(user1Id)
+        val partnershipContext = if (partnership != null) {
+            val partnershipId = UUID.fromString(partnership.id)
+            partnershipContextRepository.getContext(partnershipId)?.compactedSummary
+        } else null
+
+        // Detect language from resolutions
+        val detectedLanguage = aiProvider.detectLanguage(resolution1.resolutionText + " " + resolution2.resolutionText)
+
         // Call AI to generate summary
         val summaryResult = aiProvider.summarizeConflict(
             resolution1 = resolution1.resolutionText,
-            resolution2 = resolution2.resolutionText
+            resolution2 = resolution2.resolutionText,
+            user1Profile = user1Profile,
+            user2Profile = user2Profile,
+            partnershipContext = partnershipContext,
+            detectedLanguage = detectedLanguage
         )
 
         // Save AI summary
@@ -267,6 +347,72 @@ class JobProcessorService(
         retrospectiveRepository.updateStatus(retroId, RetroStatus.IN_PROGRESS)
 
         logger.info("Completed discussion point generation for retro $retroId")
+    }
+
+    /**
+     * Update partnership context job: Integrate conflict resolution into partnership history
+     */
+    private suspend fun updatePartnershipContextJob(jobId: UUID, conflictId: UUID, payload: String?) {
+        logger.info("Updating partnership context for conflict $conflictId")
+
+        // Get conflict and summary
+        val conflict = conflictRepository.findById(conflictId)
+            ?: throw IllegalStateException("Conflict $conflictId not found")
+
+        val summary = aiSummaryRepository.findByConflict(conflictId)
+            ?: throw IllegalStateException("No summary found for conflict $conflictId")
+
+        // Get user profiles from the two partners involved
+        val resolutions = resolutionRepository.findByConflict(conflictId)
+        if (resolutions.size < 2) {
+            throw IllegalStateException("Cannot update context: only ${resolutions.size} resolution(s) found")
+        }
+
+        val user1Id = UUID.fromString(resolutions[0].userId)
+        val user2Id = UUID.fromString(resolutions[1].userId)
+
+        val user1 = userRepository.findById(user1Id)
+            ?: throw IllegalStateException("User $user1Id not found")
+        val user2 = userRepository.findById(user2Id)
+            ?: throw IllegalStateException("User $user2Id not found")
+
+        val user1Profile = me.pavekovt.ai.UserProfile(
+            name = user1.name,
+            age = user1.age,
+            gender = user1.gender,
+            description = user1.description
+        )
+
+        val user2Profile = me.pavekovt.ai.UserProfile(
+            name = user2.name,
+            age = user2.age,
+            gender = user2.gender,
+            description = user2.description
+        )
+
+        // Get existing partnership context
+        val partnership = partnershipRepository.findActivePartnership(user1Id)
+            ?: throw IllegalStateException("No active partnership found for users")
+
+        val partnershipId = UUID.fromString(partnership.id)
+        val existingContext = partnershipContextRepository.getContext(partnershipId)?.compactedSummary
+
+        // Call AI to update context
+        val updatedContext = aiProvider.updatePartnershipContextWithConflict(
+            existingContext = existingContext,
+            conflictSummary = summary.summaryText,
+            user1Profile = user1Profile,
+            user2Profile = user2Profile
+        )
+
+        // Save updated context
+        partnershipContextRepository.upsertContext(
+            partnershipId = partnershipId,
+            compactedSummary = updatedContext,
+            incrementConflictCount = true
+        )
+
+        logger.info("Completed partnership context update for conflict $conflictId")
     }
 
     fun shutdown() {

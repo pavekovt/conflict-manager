@@ -9,4 +9,11 @@ interface UserRepository {
     suspend fun findById(id: UUID): UserDTO?
     suspend fun getUserPassword(email: String): String?
     suspend fun updateNotificationToken(userId: UUID, token: String?)
+    suspend fun updateProfile(
+        userId: UUID,
+        name: String?,
+        age: Int?,
+        gender: String?,
+        description: String?,
+    ): UserDTO?
 }

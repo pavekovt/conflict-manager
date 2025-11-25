@@ -48,6 +48,23 @@ class UserRepositoryImpl : UserRepository {
             it[notificationToken] = token
         }
     }
+
+    override suspend fun updateProfile(
+        userId: UUID,
+        name: String?,
+        age: Int?,
+        gender: String?,
+        description: String?,
+    ): UserDTO? = dbQuery {
+        Users.update({ Users.id eq userId }) {
+            if (name != null) it[Users.name] = name
+            if (age != null) it[Users.age] = age
+            if (gender != null) it[Users.gender] = gender
+            if (description != null) it[Users.description] = description
+        }
+
+        findById(userId)
+    }
 }
 
 // Extension function to map ResultRow to DTO
@@ -55,5 +72,8 @@ private fun ResultRow.toUserDTO() = UserDTO(
     id = this[Users.id].value.toString(),
     email = this[Users.email],
     name = this[Users.name],
+    age = this[Users.age],
+    gender = this[Users.gender],
+    description = this[Users.description],
     createdAt = this[Users.createdAt].toString()
 )

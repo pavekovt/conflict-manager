@@ -156,7 +156,15 @@ class ConflictService(
             )
 
             // Update conflict to approved
-            conflictRepository.updateStatus(UUID.fromString(summary.conflictId), ConflictStatus.APPROVED)
+            val conflictUUID = UUID.fromString(summary.conflictId)
+            conflictRepository.updateStatus(conflictUUID, ConflictStatus.APPROVED)
+
+            // Queue partnership context update job (async)
+            val job = jobRepository.create(
+                jobType = JobType.UPDATE_PARTNERSHIP_CONTEXT,
+                entityId = conflictUUID
+            )
+            jobProcessorService.queueJob(UUID.fromString(job.id))
         }
     }
 
