@@ -1,0 +1,4355 @@
+openapi: "3.1.0"
+info:
+  title: "conflict_manager API"
+  description: "conflict_manager API"
+  version: "1.0.0"
+servers:
+  - url: "https://conflict_manager"
+paths:
+  /api/auth/login:
+    post:
+      description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+        required: true
+      responses:
+        "401":
+          description: "Unauthorized"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+  /api/auth/me:
+    get:
+      description: ""
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Map_String"
+  /api/auth/register:
+    post:
+      description: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+        required: true
+      responses:
+        "409":
+          description: "Conflict"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+  /api/conflicts:
+    get:
+      description: "Get my conflicts"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/ConflictDTO"
+    post:
+      description: "Create conflict"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "201":
+          description: "Created"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ConflictDTO"
+  /api/conflicts/{id}:
+    get:
+      description: "Get conflict by ID"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ConflictDTO"
+  /api/conflicts/{id}/actions:
+    get:
+      description: "Get available actions for conflict (UX enhancement)"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#6:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ConflictActionsDTO"
+  /api/conflicts/{id}/approve:
+    post:
+      description: "Approve summary"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#6:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#7:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#8:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#9:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#10:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Map_String"
+  /api/conflicts/{id}/archive:
+    post:
+      description: "Archive conflict"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Map_String"
+  /api/conflicts/{id}/feelings:
+    get:
+      description: "Get my feelings for a conflict (to see AI guidance) - returns\
+        \ list"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/ConflictFeelingsDTO"
+    post:
+      description: "Submit feelings (FIRST step in conflict resolution)"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitFeelingsRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#6:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ConflictFeelingsDTO"
+  /api/conflicts/{id}/feelings/all:
+    get:
+      description: "Get ALL feelings for a conflict (both users) - for reviewing before\
+        \ resolutions"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/ConflictFeelingsDTO"
+  /api/conflicts/{id}/request-refinement:
+    post:
+      description: "Request refinement"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Map_String"
+  /api/conflicts/{id}/resolutions:
+    post:
+      description: "Submit resolution"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitResolutionRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#6:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#7:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#8:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ConflictDTO"
+  /api/conflicts/{id}/summary:
+    get:
+      description: "Get AI summary"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#6:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#7:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#8:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AISummaryDTO"
+  /api/dashboard:
+    get:
+      description: ""
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DashboardDTO"
+  /api/decisions:
+    get:
+      description: "Get all decisions"
+      parameters:
+        - name: "status"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/DecisionDTO"
+    post:
+      description: "Create manual decision (not from conflict)"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDecisionRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DecisionDTO"
+  /api/decisions/{id}:
+    get:
+      description: "Get decision by ID"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DecisionDTO"
+  /api/decisions/{id}/archive:
+    patch:
+      description: "Archive decision"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DecisionDTO"
+  /api/decisions/{id}/review:
+    patch:
+      description: "Mark decision as reviewed"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/DecisionDTO"
+  /api/events/stream:
+    get:
+      description: "SSE endpoint for streaming job events <br> GET /api/events/stream?entityId=xxx\
+        \ <br> Streams real-time updates about AI processing jobs for a specific entity\
+        \ <br> conflict, feeling, retro <br> . <br> Client can connect and listen\
+        \ for events like: <br> - Job started <br> - Job completed <br> - Job failed\
+        \ <br> - Job retrying"
+      parameters:
+        - name: "entityId"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema: { }
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+  /api/events/stream/all:
+    get:
+      description: "SSE endpoint for streaming all job events <br> admin/debugging\
+        \ <br> GET /api/events/stream/all"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+  /api/jobs/{id}:
+    get:
+      description: "Get job status by ID"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/JobStatusDTO"
+  /api/journal:
+    get:
+      description: "Get my journal entries"
+      parameters:
+        - name: "status"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+        - name: "limit"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+        - name: "offset"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/JournalEntryDTO"
+    post:
+      description: "Create journal entry (starts as draft)"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateJournalEntryRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/JournalEntryDTO"
+  /api/journal/{id}:
+    delete:
+      description: "Delete journal entry"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#6:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Map_String"
+    get:
+      description: "Get specific journal entry"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#6:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/JournalEntryDTO"
+    patch:
+      description: "Update journal entry (only drafts)"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateJournalEntryRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#6:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#7:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Map_String"
+  /api/journal/{id}/archive:
+    patch:
+      description: "Archive journal entry"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#6:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Map_String"
+  /api/journal/{id}/complete:
+    patch:
+      description: "Complete journal entry (triggers AI processing on next AI call)"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#6:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#7:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Map_String"
+  /api/notes:
+    get:
+      description: "Get my notes"
+      parameters:
+        - name: "status"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/NoteDTO"
+    post:
+      description: "Create note"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateNoteRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/NoteDTO"
+  /api/notes/{id}:
+    delete:
+      description: "Delete note"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Map_String"
+    get:
+      description: "Get note by ID"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/NoteDTO"
+    patch:
+      description: "Update note"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateNoteRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#6:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#7:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/NoteDTO"
+  /api/partnerships/{id}/accept:
+    post:
+      description: "Accept invitation"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#6:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "409":
+          description: "Conflict"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PartnershipDTO"
+  /api/partnerships/{id}/reject:
+    post:
+      description: "Reject invitation"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "204":
+          description: "No Content"
+          content:
+            '*/*':
+              schema:
+                type: "object"
+  /api/partnerships/current:
+    delete:
+      description: "End current partnership"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "204":
+          description: "No Content"
+          content:
+            '*/*':
+              schema:
+                type: "object"
+    get:
+      description: "Get current active partnership"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Map_String"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PartnershipDTO"
+  /api/partnerships/current/health:
+    get:
+      description: "Get partnership health status (UX enhancement)"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PartnershipHealthDTO"
+  /api/partnerships/invitations:
+    get:
+      description: "Get all invitations (sent and received)"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PartnershipInvitationsDTO"
+  /api/partnerships/invite:
+    post:
+      description: "Send partner invitation"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PartnerInviteRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "404":
+          description: "Not Found"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "409":
+          description: "Conflict"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "201":
+          description: "Created"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PartnershipDTO"
+  /api/retrospectives:
+    get:
+      description: "Get my retrospectives (only ones where I'm a participant)"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/RetrospectiveDTO"
+    post:
+      description: "Create retrospective"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRetrospectiveRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RetrospectiveDTO"
+  /api/retrospectives/{id}:
+    get:
+      description: "Get retrospective by ID"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#6:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RetrospectiveDTO"
+  /api/retrospectives/{id}/add-note:
+    post:
+      description: "Add note to retrospective"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddNoteToRetroRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#6:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Map_String"
+  /api/retrospectives/{id}/approve:
+    patch:
+      description: "Approve retrospective discussion points"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApproveRetrospectiveRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Map_String"
+  /api/retrospectives/{id}/cancel:
+    patch:
+      description: "Cancel retrospective"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#6:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Map_String"
+  /api/retrospectives/{id}/complete:
+    post:
+      description: "Complete retrospective"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompleteRetrospectiveRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#6:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#7:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#8:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#9:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Map_String"
+  /api/retrospectives/{id}/generate-points:
+    post:
+      description: "Generate AI discussion points"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#6:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#7:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/Map_String"
+  /api/retrospectives/{id}/notes:
+    get:
+      description: "Get retrospective with notes"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#5:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#6:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RetrospectiveWithNotesDTO"
+  /api/users/profile:
+    get:
+      description: "Get current user profile"
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserDTO"
+    patch:
+      description: "Update user profile <br> name, age, gender, description, preferred\
+        \ language"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserProfileRequest"
+        required: true
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                Example#1:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#2:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#3:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+                Example#4:
+                  description: ""
+                  value:
+                    error: "null"
+                    code: "null"
+                    userAction: "null"
+                    retryable: false
+                    supportingData: "null"
+        "200":
+          description: "OK"
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserDTO"
+components:
+  schemas:
+    ErrorResponse:
+      type: "object"
+      properties:
+        error:
+          type: "string"
+        code:
+          type: "string"
+          nullable: true
+        userAction:
+          type: "string"
+          nullable: true
+        retryable:
+          type: "boolean"
+        supportingData:
+          type: "string"
+          nullable: true
+      required:
+        - "error"
+        - "retryable"
+    LoginRequest:
+      type: "object"
+      properties:
+        email:
+          type: "string"
+        password:
+          type: "string"
+      required:
+        - "email"
+        - "password"
+    UserDTO:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        email:
+          type: "string"
+        name:
+          type: "string"
+        age:
+          type: "integer"
+          format: "int32"
+          nullable: true
+        gender:
+          type: "string"
+          nullable: true
+        description:
+          type: "string"
+          nullable: true
+        createdAt:
+          type: "string"
+      required:
+        - "id"
+        - "email"
+        - "name"
+        - "createdAt"
+    AuthResponse:
+      type: "object"
+      properties:
+        token:
+          type: "string"
+        expiresIn:
+          type: "integer"
+          format: "int64"
+          default: "3600000"
+        user:
+          nullable: true
+          $ref: "#/components/schemas/UserDTO"
+      required:
+        - "token"
+        - "expiresIn"
+    Map:
+      type: "object"
+      properties: { }
+    Map_String:
+      type: "string"
+    RegisterRequest:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+        email:
+          type: "string"
+        password:
+          type: "string"
+      required:
+        - "name"
+        - "email"
+        - "password"
+    ConflictDTO:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        initiatedBy:
+          type: "string"
+        status:
+          type: "string"
+          enum:
+            - "PENDING_FEELINGS"
+            - "PROCESSING_FEELINGS"
+            - "PENDING_RESOLUTIONS"
+            - "PROCESSING_SUMMARY"
+            - "SUMMARY_GENERATED"
+            - "REFINEMENT"
+            - "APPROVED"
+            - "ARCHIVED"
+        createdAt:
+          type: "string"
+        myResolutionSubmitted:
+          type: "boolean"
+        partnerResolutionSubmitted:
+          type: "boolean"
+        summaryAvailable:
+          type: "boolean"
+        nextAction:
+          type: "string"
+          nullable: true
+        waitingFor:
+          type: "string"
+          nullable: true
+        allowedActions:
+          type: "array"
+          items:
+            type: "string"
+            enum:
+              - "SUBMIT_FEELINGS"
+              - "VIEW_FEELINGS"
+              - "SUBMIT_RESOLUTION"
+              - "VIEW_SUMMARY"
+              - "APPROVE_SUMMARY"
+              - "REQUEST_REFINEMENT"
+              - "ARCHIVE"
+      required:
+        - "id"
+        - "initiatedBy"
+        - "status"
+        - "createdAt"
+        - "myResolutionSubmitted"
+        - "partnerResolutionSubmitted"
+        - "summaryAvailable"
+        - "allowedActions"
+    ActionAvailability:
+      type: "object"
+      properties:
+        action:
+          type: "string"
+          enum:
+            - "SUBMIT_FEELINGS"
+            - "VIEW_FEELINGS"
+            - "SUBMIT_RESOLUTION"
+            - "VIEW_SUMMARY"
+            - "APPROVE_SUMMARY"
+            - "REQUEST_REFINEMENT"
+            - "ARCHIVE"
+        enabled:
+          type: "boolean"
+        reason:
+          type: "string"
+          nullable: true
+      required:
+        - "action"
+        - "enabled"
+    UserProgress:
+      type: "object"
+      properties:
+        feelingsSubmitted:
+          type: "integer"
+          format: "int32"
+        feelingsProcessed:
+          type: "integer"
+          format: "int32"
+        resolutionSubmitted:
+          type: "boolean"
+        summaryApproved:
+          type: "boolean"
+      required:
+        - "feelingsSubmitted"
+        - "feelingsProcessed"
+        - "resolutionSubmitted"
+        - "summaryApproved"
+    ConflictProgress:
+      type: "object"
+      properties:
+        myProgress:
+          $ref: "#/components/schemas/UserProgress"
+        partnerProgress:
+          $ref: "#/components/schemas/UserProgress"
+      required:
+        - "myProgress"
+        - "partnerProgress"
+    ConflictActionsDTO:
+      type: "object"
+      properties:
+        availableActions:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/ActionAvailability"
+        currentPhase:
+          type: "string"
+        progress:
+          $ref: "#/components/schemas/ConflictProgress"
+        nextSteps:
+          type: "array"
+          items:
+            type: "string"
+      required:
+        - "availableActions"
+        - "currentPhase"
+        - "progress"
+        - "nextSteps"
+    ConflictFeelingsDTO:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        conflictId:
+          type: "string"
+        userId:
+          type: "string"
+        feelingsText:
+          type: "string"
+        status:
+          type: "string"
+          enum:
+            - "PROCESSING"
+            - "COMPLETED"
+            - "FAILED"
+        aiGuidance:
+          type: "string"
+          nullable: true
+        suggestedResolution:
+          type: "string"
+          nullable: true
+        emotionalTone:
+          type: "string"
+          nullable: true
+        submittedAt:
+          type: "string"
+        visibleToPartner:
+          type: "boolean"
+        visibilityReason:
+          type: "string"
+          nullable: true
+      required:
+        - "id"
+        - "conflictId"
+        - "userId"
+        - "feelingsText"
+        - "status"
+        - "submittedAt"
+        - "visibleToPartner"
+    SubmitFeelingsRequest:
+      type: "object"
+      properties:
+        feelingsText:
+          type: "string"
+      required:
+        - "feelingsText"
+    SubmitResolutionRequest:
+      type: "object"
+      properties:
+        resolutionText:
+          type: "string"
+      required:
+        - "resolutionText"
+    AISummaryDTO:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        conflictId:
+          type: "string"
+        summaryText:
+          type: "string"
+        patterns:
+          type: "string"
+          nullable: true
+        advice:
+          type: "string"
+          nullable: true
+        recurringIssues:
+          type: "array"
+          items:
+            type: "string"
+        themeTags:
+          type: "array"
+          items:
+            type: "string"
+        provider:
+          type: "string"
+        approvedByMe:
+          type: "boolean"
+        approvedByPartner:
+          type: "boolean"
+        createdAt:
+          type: "string"
+      required:
+        - "id"
+        - "conflictId"
+        - "summaryText"
+        - "recurringIssues"
+        - "themeTags"
+        - "provider"
+        - "approvedByMe"
+        - "approvedByPartner"
+        - "createdAt"
+    PendingAction:
+      type: "object"
+      properties:
+        type:
+          type: "string"
+        id:
+          type: "string"
+        title:
+          type: "string"
+        action:
+          type: "string"
+        priority:
+          type: "string"
+          enum:
+            - "HIGH"
+            - "MEDIUM"
+            - "LOW"
+        dueDate:
+          type: "string"
+          nullable: true
+        url:
+          type: "string"
+      required:
+        - "type"
+        - "id"
+        - "title"
+        - "action"
+        - "priority"
+        - "url"
+    DashboardSummary:
+      type: "object"
+      properties:
+        totalConflicts:
+          type: "integer"
+          format: "int32"
+        activeConflicts:
+          type: "integer"
+          format: "int32"
+        conflictsNeedingMyAction:
+          type: "integer"
+          format: "int32"
+        conflictsAwaitingPartner:
+          type: "integer"
+          format: "int32"
+        pendingRetrospectives:
+          type: "integer"
+          format: "int32"
+        unreviewedDecisions:
+          type: "integer"
+          format: "int32"
+        draftJournals:
+          type: "integer"
+          format: "int32"
+        completedJournalsUnprocessed:
+          type: "integer"
+          format: "int32"
+      required:
+        - "totalConflicts"
+        - "activeConflicts"
+        - "conflictsNeedingMyAction"
+        - "conflictsAwaitingPartner"
+        - "pendingRetrospectives"
+        - "unreviewedDecisions"
+        - "draftJournals"
+        - "completedJournalsUnprocessed"
+    RecentAction:
+      type: "object"
+      properties:
+        action:
+          type: "string"
+        resource:
+          type: "string"
+        timestamp:
+          type: "string"
+      required:
+        - "action"
+        - "resource"
+        - "timestamp"
+    PartnerActivity:
+      type: "object"
+      properties:
+        partnerName:
+          type: "string"
+        lastActive:
+          type: "string"
+          nullable: true
+        currentlyActive:
+          type: "boolean"
+        recentActions:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/RecentAction"
+      required:
+        - "partnerName"
+        - "currentlyActive"
+        - "recentActions"
+    DashboardDTO:
+      type: "object"
+      properties:
+        pendingActions:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/PendingAction"
+        summary:
+          $ref: "#/components/schemas/DashboardSummary"
+        partnerActivity:
+          nullable: true
+          $ref: "#/components/schemas/PartnerActivity"
+      required:
+        - "pendingActions"
+        - "summary"
+    DecisionDTO:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        conflictId:
+          type: "string"
+          nullable: true
+        summary:
+          type: "string"
+        category:
+          type: "string"
+          nullable: true
+        status:
+          type: "string"
+        createdAt:
+          type: "string"
+        reviewedAt:
+          type: "string"
+          nullable: true
+      required:
+        - "id"
+        - "summary"
+        - "status"
+        - "createdAt"
+    CreateDecisionRequest:
+      type: "object"
+      properties:
+        summary:
+          type: "string"
+        category:
+          type: "string"
+          nullable: true
+      required:
+        - "summary"
+    JobResult:
+      type: "object"
+      properties:
+        resourceType:
+          type: "string"
+        resourceId:
+          type: "string"
+        actionUrl:
+          type: "string"
+      required:
+        - "resourceType"
+        - "resourceId"
+        - "actionUrl"
+    JobStatusDTO:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        type:
+          type: "string"
+          enum:
+            - "PROCESS_FEELINGS"
+            - "GENERATE_SUMMARY"
+            - "GENERATE_DISCUSSION_POINTS"
+            - "UPDATE_PARTNERSHIP_CONTEXT"
+        status:
+          type: "string"
+          enum:
+            - "PENDING"
+            - "PROCESSING"
+            - "COMPLETED"
+            - "FAILED"
+        progress:
+          type: "integer"
+          format: "int32"
+        userMessage:
+          type: "string"
+        isComplete:
+          type: "boolean"
+        isFailed:
+          type: "boolean"
+        errorMessage:
+          type: "string"
+          nullable: true
+        result:
+          nullable: true
+          $ref: "#/components/schemas/JobResult"
+        createdAt:
+          type: "string"
+        estimatedCompletion:
+          type: "string"
+          nullable: true
+      required:
+        - "id"
+        - "type"
+        - "status"
+        - "progress"
+        - "userMessage"
+        - "isComplete"
+        - "isFailed"
+        - "createdAt"
+    JournalAIInsights:
+      type: "object"
+      properties:
+        extractedThemes:
+          type: "array"
+          items:
+            type: "string"
+        emotionalTone:
+          type: "string"
+          nullable: true
+        addedToContext:
+          type: "boolean"
+        processedAt:
+          type: "string"
+          nullable: true
+      required:
+        - "extractedThemes"
+        - "addedToContext"
+    JournalEntryDTO:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        userId:
+          type: "string"
+        partnershipId:
+          type: "string"
+        content:
+          type: "string"
+        status:
+          type: "string"
+        createdAt:
+          type: "string"
+        completedAt:
+          type: "string"
+          nullable: true
+        privacy:
+          type: "string"
+          enum:
+            - "PRIVATE"
+            - "AI_ONLY"
+            - "PARTNER_VISIBLE"
+        aiInsights:
+          nullable: true
+          $ref: "#/components/schemas/JournalAIInsights"
+      required:
+        - "id"
+        - "userId"
+        - "partnershipId"
+        - "content"
+        - "status"
+        - "createdAt"
+        - "privacy"
+    CreateJournalEntryRequest:
+      type: "object"
+      properties:
+        content:
+          type: "string"
+      required:
+        - "content"
+    UpdateJournalEntryRequest:
+      type: "object"
+      properties:
+        content:
+          type: "string"
+      required:
+        - "content"
+    NoteDTO:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        userId:
+          type: "string"
+        content:
+          type: "string"
+        status:
+          type: "string"
+        mood:
+          type: "string"
+          nullable: true
+        createdAt:
+          type: "string"
+      required:
+        - "id"
+        - "userId"
+        - "content"
+        - "status"
+        - "createdAt"
+    CreateNoteRequest:
+      type: "object"
+      properties:
+        content:
+          type: "string"
+        mood:
+          type: "string"
+          nullable: true
+      required:
+        - "content"
+    UpdateNoteRequest:
+      type: "object"
+      properties:
+        content:
+          type: "string"
+          nullable: true
+        status:
+          type: "string"
+          nullable: true
+        mood:
+          type: "string"
+          nullable: true
+    PartnershipDTO:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        partnerId:
+          type: "string"
+        partnerName:
+          type: "string"
+        partnerEmail:
+          type: "string"
+        status:
+          type: "string"
+        initiatedByMe:
+          type: "boolean"
+        createdAt:
+          type: "string"
+        acceptedAt:
+          type: "string"
+          nullable: true
+      required:
+        - "id"
+        - "partnerId"
+        - "partnerName"
+        - "partnerEmail"
+        - "status"
+        - "initiatedByMe"
+        - "createdAt"
+    PartnershipStats:
+      type: "object"
+      properties:
+        totalConflictsResolved:
+          type: "integer"
+          format: "int32"
+        retrospectivesCompleted:
+          type: "integer"
+          format: "int32"
+        activeConflicts:
+          type: "integer"
+          format: "int32"
+        daysSinceLastRetrospective:
+          type: "integer"
+          format: "int32"
+          nullable: true
+        unreviewedDecisions:
+          type: "integer"
+          format: "int32"
+      required:
+        - "totalConflictsResolved"
+        - "retrospectivesCompleted"
+        - "activeConflicts"
+        - "unreviewedDecisions"
+    PartnershipHealthDTO:
+      type: "object"
+      properties:
+        isActive:
+          type: "boolean"
+        partnerName:
+          type: "string"
+          nullable: true
+        needsAttention:
+          type: "array"
+          items:
+            type: "string"
+        suggestions:
+          type: "array"
+          items:
+            type: "string"
+        stats:
+          $ref: "#/components/schemas/PartnershipStats"
+      required:
+        - "isActive"
+        - "needsAttention"
+        - "suggestions"
+        - "stats"
+    PartnershipInvitationsDTO:
+      type: "object"
+      properties:
+        sent:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/PartnershipDTO"
+        received:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/PartnershipDTO"
+      required:
+        - "sent"
+        - "received"
+    PartnerInviteRequest:
+      type: "object"
+      properties:
+        partnerEmail:
+          type: "string"
+      required:
+        - "partnerEmail"
+    DiscussionPoint:
+      type: "object"
+      properties:
+        theme:
+          type: "string"
+        relatedNoteIds:
+          type: "array"
+          items:
+            type: "string"
+        suggestedApproach:
+          type: "string"
+      required:
+        - "theme"
+        - "relatedNoteIds"
+        - "suggestedApproach"
+    RetrospectiveDTO:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        scheduledDate:
+          type: "string"
+          nullable: true
+        startedAt:
+          type: "string"
+        completedAt:
+          type: "string"
+          nullable: true
+        status:
+          type: "string"
+        aiDiscussionPoints:
+          type: "array"
+          nullable: true
+          items:
+            $ref: "#/components/schemas/DiscussionPoint"
+        finalSummary:
+          type: "string"
+          nullable: true
+        approvedByUserId1:
+          type: "string"
+          nullable: true
+        approvedByUserId2:
+          type: "string"
+          nullable: true
+        approvalText1:
+          type: "string"
+          nullable: true
+        approvalText2:
+          type: "string"
+          nullable: true
+        createdAt:
+          type: "string"
+        myApprovalSubmitted:
+          type: "boolean"
+        partnerApprovalSubmitted:
+          type: "boolean"
+        canComplete:
+          type: "boolean"
+        nextAction:
+          type: "string"
+          nullable: true
+      required:
+        - "id"
+        - "startedAt"
+        - "status"
+        - "createdAt"
+        - "myApprovalSubmitted"
+        - "partnerApprovalSubmitted"
+        - "canComplete"
+    CreateRetrospectiveRequest:
+      type: "object"
+      properties:
+        scheduledDate:
+          type: "string"
+          nullable: true
+        userIds:
+          type: "array"
+          nullable: true
+          items:
+            type: "string"
+    AddNoteToRetroRequest:
+      type: "object"
+      properties:
+        noteId:
+          type: "string"
+      required:
+        - "noteId"
+    ApproveRetrospectiveRequest:
+      type: "object"
+      properties:
+        approvalText:
+          type: "string"
+      required:
+        - "approvalText"
+    CompleteRetrospectiveRequest:
+      type: "object"
+      properties:
+        finalSummary:
+          type: "string"
+      required:
+        - "finalSummary"
+    RetrospectiveWithNotesDTO:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+        scheduledDate:
+          type: "string"
+          nullable: true
+        startedAt:
+          type: "string"
+        completedAt:
+          type: "string"
+          nullable: true
+        status:
+          type: "string"
+        aiDiscussionPoints:
+          type: "array"
+          nullable: true
+          items:
+            $ref: "#/components/schemas/DiscussionPoint"
+        finalSummary:
+          type: "string"
+          nullable: true
+        approvedByUserId1:
+          type: "string"
+          nullable: true
+        approvedByUserId2:
+          type: "string"
+          nullable: true
+        approvalText1:
+          type: "string"
+          nullable: true
+        approvalText2:
+          type: "string"
+          nullable: true
+        notes:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/NoteDTO"
+        createdAt:
+          type: "string"
+      required:
+        - "id"
+        - "startedAt"
+        - "status"
+        - "notes"
+        - "createdAt"
+    UpdateUserProfileRequest:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+          nullable: true
+        age:
+          type: "integer"
+          format: "int32"
+          nullable: true
+        gender:
+          type: "string"
+          nullable: true
+        description:
+          type: "string"
+          nullable: true

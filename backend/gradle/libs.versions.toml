@@ -10,6 +10,8 @@ bcrypt = "0.10.2"
 mockk = "1.13.14"
 testcontainers = "1.20.4"
 claude = "2.10.0"
+gql = "9.0.0-alpha.8"
+kotlinx = "1.9.0"
 
 [libraries]
 koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koin" }
@@ -31,6 +33,7 @@ ktor-server-auth = { module = "io.ktor:ktor-server-auth", version.ref = "ktor" }
 ktor-server-auth-jwt = { module = "io.ktor:ktor-server-auth-jwt", version.ref = "ktor" }
 ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor" }
+ktor-server-openapi = { module = "io.ktor:ktor-server-openapi", version.ref = "ktor" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml", version.ref = "ktor" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
@@ -44,7 +47,7 @@ ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negoti
 
 bcrypt = { module = "at.favre.lib:bcrypt", version.ref = "bcrypt" }
 
-anthropic = { module = "com.anthropic:anthropic-java", version.ref = "claude"}
+anthropic = { module = "com.anthropic:anthropic-java", version.ref = "claude" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

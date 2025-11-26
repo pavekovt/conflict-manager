@@ -65,8 +65,8 @@ class TestUser(
     val token: String,
     val id: String
 ) {
-    private val client get() = context.client
-    private val baseUrl get() = context.baseUrl
+    internal val client get() = context.client
+    internal val baseUrl get() = context.baseUrl
 
     // ============= DSL Methods =============
 
