@@ -13,7 +13,10 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.datetime.LocalDateTime
+import me.pavekovt.db.dbQuery
 import me.pavekovt.dto.AISummaryDTO
 import me.pavekovt.dto.ConflictDTO
 import me.pavekovt.dto.DecisionDTO
@@ -30,7 +33,11 @@ import me.pavekovt.dto.exchange.CreateRetrospectiveRequest
 import me.pavekovt.dto.exchange.RegisterRequest
 import me.pavekovt.dto.exchange.SubmitResolutionRequest
 import me.pavekovt.dto.exchange.UpdateNoteRequest
+import me.pavekovt.entity.ConflictStatus
+import me.pavekovt.entity.Conflicts
 import me.pavekovt.entity.NoteStatus
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.update
 import java.util.Calendar
 import java.util.Date
 import java.util.UUID
@@ -104,6 +111,47 @@ open class TestSdkUtils(
         assertEquals(HttpStatusCode.Created, response.status)
 
         return response.body<ConflictDTO>()
+    }
+
+    /**
+     * Helper to create a conflict already in PENDING_RESOLUTIONS status for testing.
+     * Bypasses feelings submission for backward compatibility with old tests.
+     *
+     * For proper testing of the feelings-first workflow, use createConflict() + submitFeelings()
+     */
+    suspend fun TestUser.createConflictReadyForResolutions(): ConflictDTO {
+        val conflict = createConflict()
+
+        // Directly update database to skip feelings phase (test convenience only)
+        dbQuery {
+            Conflicts.update({ Conflicts.id eq UUID.fromString(conflict.id) }) {
+                it[status] = ConflictStatus.PENDING_RESOLUTIONS
+            }
+        }
+
+        return getConflict(conflict.id)
+    }
+
+    /**
+     * Wait for conflict status to reach a target status (for async operations).
+     * Polls the conflict status up to maxAttempts times with a delay between attempts.
+     */
+    suspend fun TestUser.waitForConflictStatus(
+        conflictId: String,
+        targetStatus: me.pavekovt.entity.ConflictStatus,
+        maxAttempts: Int = 20,
+        delayMs: Long = 500
+    ): ConflictDTO {
+        repeat(maxAttempts) { attempt ->
+            val conflict = getConflict(conflictId)
+            if (conflict.status == targetStatus) {
+                return conflict
+            }
+            if (attempt < maxAttempts - 1) {
+                delay(delayMs)
+            }
+        }
+        throw AssertionError("Conflict did not reach status $targetStatus after ${maxAttempts * delayMs}ms")
     }
 
     suspend fun TestUser.getConflicts(): List<ConflictDTO> {

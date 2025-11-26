@@ -6,7 +6,7 @@ import java.util.UUID
 
 interface ConflictRepository {
     suspend fun create(initiatedBy: UUID): ConflictDTO
-    suspend fun findById(conflictId: UUID): ConflictDTO?
+    suspend fun findById(conflictId: UUID, currentUserId: UUID): ConflictDTO?
     suspend fun findByUser(userId: UUID, partnersIds: List<UUID>): List<ConflictDTO>
     suspend fun updateStatus(conflictId: UUID, newStatus: ConflictStatus): Boolean
     suspend fun getPartnerUserId(conflictId: UUID, currentUserId: UUID): UUID?

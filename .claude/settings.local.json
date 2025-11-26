@@ -13,7 +13,9 @@
       "Bash(xargs:*)",
       "Bash(cat:*)",
       "Bash(..gradlew compileKotlin)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(find:*)",
+      "Bash(tee:*)"
     ],
     "deny": [],
     "ask": []

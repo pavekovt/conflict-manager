@@ -21,7 +21,7 @@ fun Application.module() {
     configureSecurity()
     configureDatabase()
     configureHTTP()
-    configureOpenApi()
+//    configureOpenApi()
     configureSSE()
     configureRouting()
 }

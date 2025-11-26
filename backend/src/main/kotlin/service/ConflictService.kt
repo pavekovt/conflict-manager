@@ -29,8 +29,8 @@ class ConflictService(
         return conflictRepository.create(userId)
     }
 
-    suspend fun findById(conflictId: UUID): ConflictDTO? {
-        return conflictRepository.findById(conflictId)
+    suspend fun findById(conflictId: UUID, userId: UUID): ConflictDTO? {
+        return conflictRepository.findById(conflictId, userId)
     }
 
     suspend fun findByUser(userId: UUID, partnersIds: List<UUID>): List<ConflictDTO> {
@@ -118,7 +118,7 @@ class ConflictService(
             jobProcessorService.queueJob(UUID.fromString(job.id))
         }
 
-        return conflictRepository.findById(conflictId)
+        return conflictRepository.findById(conflictId, userId)
             ?: throw IllegalStateException("Conflict not found")
     }
 
@@ -177,7 +177,7 @@ class ConflictService(
     }
 
     suspend fun getAvailableActions(conflictId: UUID, userId: UUID): me.pavekovt.dto.ConflictActionsDTO {
-        val conflict = conflictRepository.findById(conflictId)
+        val conflict = conflictRepository.findById(conflictId, userId)
             ?: throw IllegalStateException("Conflict not found")
 
         // Get feelings info

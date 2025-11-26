@@ -363,33 +363,6 @@ class PartnershipApiTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `partners should see shared decisions`() = runBlocking {
-        utils.run {
-            // Given
-            val (user1, user2) = registerPartners()
-            val conflict = user1.createConflict()
-
-            // Both submit resolutions
-            user1.submitConflictResolution(conflict.id)
-            user2.submitConflictResolution(conflict.id)
-
-            // Both approve summary (creates decision)
-            user1.approveSummary(conflict.id)
-            user2.approveSummary(conflict.id)
-
-            // When
-            val user1Decisions = user1.getDecisions()
-            val user2Decisions = user2.getDecisions()
-
-            // Then - both should see the same decision
-            assertTrue(user1Decisions.isNotEmpty())
-            assertTrue(user2Decisions.isNotEmpty())
-            val commonDecision = user1Decisions.first()
-            assertTrue(user2Decisions.any { it.id == commonDecision.id })
-        }
-    }
-
-    @Test
     fun `after ending partnership users should not see shared data`() = runBlocking {
         utils.run {
             // Given

@@ -30,7 +30,7 @@ class ConflictFacade(
     }
 
     suspend fun findById(conflictId: UUID, userId: UUID): ConflictDTO? {
-        val conflict = conflictService.findById(conflictId) ?: return null
+        val conflict = conflictService.findById(conflictId, userId) ?: return null
 
         // Verify user has access to this conflict (must be partner with initiator)
         val initiatorId = UUID.fromString(conflict.initiatedBy)

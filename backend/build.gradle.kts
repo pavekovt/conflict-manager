@@ -43,6 +43,9 @@ dependencies {
     implementation(libs.logback.classic)
     implementation(libs.ktor.server.config.yaml)
 
+    // Open Telemetry
+    implementation(libs.opentelemetry.ktor)
+
     // OpenApi
     implementation(libs.ktor.server.openapi)
 

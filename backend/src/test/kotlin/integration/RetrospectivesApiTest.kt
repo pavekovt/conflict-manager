@@ -16,6 +16,7 @@ import me.pavekovt.dto.exchange.LoginRequest
 import me.pavekovt.dto.exchange.RegisterRequest
 import me.pavekovt.dto.exchange.UpdateNoteRequest
 import me.pavekovt.entity.NoteStatus
+import me.pavekovt.integration.dsl.testApi
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -155,19 +156,25 @@ class RetrospectivesApiTest : IntegrationTestBase() {
 
     @Test
     fun `POST complete should finalize retrospective`(): Unit = runBlocking {
-        utils.run {
-            // Given
-            val (user) = registerPartners()
-            val retroId = user.createRetrospective().id
+        testApi(baseUrl, client) {
+            partnership {
+                users {
+                    val id = user1.retrospective {
+                        create()
+                        approve()
+                    }.returningId()
 
-            // When
-            val response = user.completeRetro(retroId, "We discussed important topics")
-
-            // Then
-            val retro = user.getRetrospective(retroId)
-            assertEquals("completed", retro.status)
-            assertEquals("We discussed important topics", retro.finalSummary)
-            assertNotNull(retro.completedAt)
+                    user2.retrospective {
+                        fetch(id)
+                        approve()
+                        complete("Cool topics!")
+                        assertState {
+                            isCompleted()
+                            hasSummary("Cool topics!")
+                        }
+                    }
+                }
+            }
         }
     }
 

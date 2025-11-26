@@ -43,6 +43,7 @@ class JobProcessorService(
     val eventFlow: SharedFlow<JobEvent> = _eventFlow.asSharedFlow()
 
     init {
+        logger.info("JobProcessorService init block starting...")
         // Start worker coroutines
         repeat(3) { workerId ->
             scope.launch {
@@ -53,29 +54,36 @@ class JobProcessorService(
 
         // Start job poller
         scope.launch {
+            logger.info("Starting job poller")
             pollPendingJobs()
         }
+        logger.info("JobProcessorService init block completed - workers started")
     }
 
     /**
      * Queue a new job for processing
      */
     suspend fun queueJob(jobId: UUID) {
+        logger.info("Queueing job $jobId")
         jobChannel.send(jobId)
+        logger.info("Job $jobId queued successfully")
     }
 
     /**
      * Worker coroutine that processes jobs from the channel
      */
     private suspend fun processJobs(workerId: Int) {
+        logger.info("Worker $workerId waiting for jobs...")
         for (jobId in jobChannel) {
             try {
-                logger.debug("Worker $workerId processing job $jobId")
+                logger.info("Worker $workerId picked up job $jobId")
                 processJob(jobId)
+                logger.info("Worker $workerId completed job $jobId")
             } catch (e: Exception) {
                 logger.error("Worker $workerId failed to process job $jobId", e)
             }
         }
+        logger.info("Worker $workerId shutting down")
     }
 
     /**
@@ -127,16 +135,19 @@ class JobProcessorService(
             _eventFlow.emit(JobEvent.Completed(jobId.toString(), job.jobType, job.entityId))
 
         } catch (e: Exception) {
-            logger.error("Job $jobId failed", e)
+            logger.error("Job $jobId failed with exception: ${e.javaClass.name}: ${e.message}", e)
+            logger.error("Full stack trace:", e)
             val errorMessage = e.message ?: "Unknown error"
 
             // Retry logic
             if (job.retryCount < 3) {
+                logger.info("Retrying job $jobId (attempt ${job.retryCount + 1}/3)")
                 jobRepository.incrementRetryCount(jobId)
                 jobRepository.updateStatus(jobId, JobStatus.PENDING) // Re-queue
                 queueJob(jobId)
                 _eventFlow.emit(JobEvent.Retrying(jobId.toString(), job.jobType, job.entityId, job.retryCount + 1))
             } else {
+                logger.error("Job $jobId exceeded max retries, marking as failed")
                 jobRepository.markAsFailed(jobId, errorMessage)
                 _eventFlow.emit(JobEvent.Failed(jobId.toString(), job.jobType, job.entityId, errorMessage))
             }
@@ -153,15 +164,18 @@ class JobProcessorService(
         val feeling = conflictFeelingsRepository.findById(feelingId)
             ?: throw IllegalStateException("Feeling $feelingId not found")
 
+        // Get user ID for context
+        val feelingUserId = UUID.fromString(feeling.userId)
+
         // Get conflict for context
-        val conflict = conflictRepository.findById(UUID.fromString(feeling.conflictId))
+        val conflict = conflictRepository.findById(UUID.fromString(feeling.conflictId), feelingUserId)
             ?: throw IllegalStateException("Conflict ${feeling.conflictId} not found")
 
         // Get all previous feelings from this user for this conflict (for context)
         val conflictId = UUID.fromString(conflict.id)
         val previousFeelings = conflictFeelingsRepository.findByConflictAndUser(
             conflictId,
-            UUID.fromString(feeling.userId)
+            feelingUserId
         ).filter { it.status == ConflictFeelingsStatus.COMPLETED } // Only include completed ones
 
         // Build context from previous feelings
@@ -379,13 +393,6 @@ class JobProcessorService(
     private suspend fun updatePartnershipContextJob(jobId: UUID, conflictId: UUID, payload: String?) {
         logger.info("Updating partnership context for conflict $conflictId")
 
-        // Get conflict and summary
-        val conflict = conflictRepository.findById(conflictId)
-            ?: throw IllegalStateException("Conflict $conflictId not found")
-
-        val summary = aiSummaryRepository.findByConflict(conflictId)
-            ?: throw IllegalStateException("No summary found for conflict $conflictId")
-
         // Get user profiles from the two partners involved
         val resolutions = resolutionRepository.findByConflict(conflictId)
         if (resolutions.size < 2) {
@@ -393,6 +400,13 @@ class JobProcessorService(
         }
 
         val user1Id = UUID.fromString(resolutions[0].userId)
+
+        // Get conflict and summary
+        val conflict = conflictRepository.findById(conflictId, user1Id)
+            ?: throw IllegalStateException("Conflict $conflictId not found")
+
+        val summary = aiSummaryRepository.findByConflict(conflictId)
+            ?: throw IllegalStateException("No summary found for conflict $conflictId")
         val user2Id = UUID.fromString(resolutions[1].userId)
 
         val user1 = userRepository.findById(user1Id)

@@ -88,14 +88,14 @@ class ConflictServiceTest {
             summaryAvailable = false
         )
 
-        coEvery { conflictRepository.findById(conflictId) } returns conflict
+        coEvery { conflictRepository.findById(conflictId, userId) } returns conflict
 
         // When
-        val result = conflictService.findById(conflictId)
+        val result = conflictService.findById(conflictId, userId)
 
         // Then
         assertEquals(conflict, result)
-        coVerify { conflictRepository.findById(conflictId) }
+        coVerify { conflictRepository.findById(conflictId, userId) }
     }
 
     @Test
@@ -111,27 +111,27 @@ class ConflictServiceTest {
             summaryAvailable = false
         )
 
-        coEvery { conflictRepository.findById(conflictId) } returns conflict
+        coEvery { conflictRepository.findById(conflictId, userId) } returns conflict
 
         // When
-        val result = conflictService.findById(conflictId)
+        val result = conflictService.findById(conflictId, userId)
 
         // Then
         assertEquals(conflict, result)
-        coVerify { conflictRepository.findById(conflictId) }
+        coVerify { conflictRepository.findById(conflictId, userId) }
     }
 
     @Test
     fun `findById should return null when conflict not found`() = runBlocking {
         // Given
-        coEvery { conflictRepository.findById(conflictId) } returns null
+        coEvery { conflictRepository.findById(conflictId, userId) } returns null
 
         // When
-        val result = conflictService.findById(conflictId)
+        val result = conflictService.findById(conflictId, userId)
 
         // Then
         assertNull(result)
-        coVerify { conflictRepository.findById(conflictId) }
+        coVerify { conflictRepository.findById(conflictId, userId) }
     }
 
     @Test
@@ -198,7 +198,7 @@ class ConflictServiceTest {
         coEvery { resolutionRepository.hasResolution(conflictId, userId) } returns false
         coEvery { resolutionRepository.create(conflictId, userId, resolutionText) } returns createdResolution
         coEvery { resolutionRepository.getBothResolutions(conflictId) } returns null
-        coEvery { conflictRepository.findById(conflictId) } returns conflict
+        coEvery { conflictRepository.findById(conflictId, userId) } returns conflict
 
         // When
         val result = conflictService.submitResolution(conflictId, userId, resolutionText)
@@ -255,7 +255,7 @@ class ConflictServiceTest {
             summaryResult.themeTags
         ) } returns summaryId
         coEvery { conflictRepository.updateStatus(conflictId, ConflictStatus.SUMMARY_GENERATED) } returns true
-        coEvery { conflictRepository.findById(conflictId) } returns updatedConflict
+        coEvery { conflictRepository.findById(conflictId, userId) } returns updatedConflict
 
         // When
         val result = conflictService.submitResolution(conflictId, userId, resolutionText)

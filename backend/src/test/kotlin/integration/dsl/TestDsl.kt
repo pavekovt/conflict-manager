@@ -5,9 +5,16 @@ import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import me.pavekovt.db.dbQuery
 import me.pavekovt.dto.*
 import me.pavekovt.dto.exchange.*
+import me.pavekovt.entity.ConflictStatus
+import me.pavekovt.entity.Conflicts
 import me.pavekovt.entity.NoteStatus
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.update
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -76,6 +83,36 @@ class TestUser(
         return builder
     }
 
+    suspend fun firstDecision(block: suspend DecisionBuilder.() -> Unit): DecisionDTO {
+        val builder = DecisionBuilder(this, getDecisions().first().id)
+        builder.block()
+        return builder.decision
+    }
+
+    suspend fun decision(id: String, block: suspend DecisionBuilder.() -> Unit): DecisionBuilder {
+        val builder = DecisionBuilder(this, id)
+        builder.block()
+        return builder
+    }
+
+    suspend fun decisions(block: suspend DecisionListAssertion.() -> Unit): List<DecisionDTO> {
+        val decisions = getDecisions()
+        DecisionListAssertion(decisions).block()
+        return decisions
+    }
+
+    suspend fun note(text: String = "Note ${UUID.randomUUID().toString().take(8)}", block: suspend NoteBuilder.() -> Unit = {}): NoteBuilder {
+        val builder = NoteBuilder(this, text)
+        builder.block()
+        return builder
+    }
+
+    suspend fun retrospective(block: suspend RetrospectiveBuilder.() -> Unit): RetrospectiveBuilder {
+        val builder = RetrospectiveBuilder(this)
+        builder.block()
+        return builder
+    }
+
     suspend fun dashboard(block: suspend DashboardAssertion.() -> Unit): DashboardDTO {
         val dashboard = getDashboard()
         DashboardAssertion(dashboard).block()
@@ -97,27 +134,23 @@ class TestUser(
         return health
     }
 
-    // ============= HTTP Operations =============
-
-    suspend fun getDashboard(): DashboardDTO =
-        client.get("$baseUrl/api/dashboard") {
-            authenticatedAs(this@TestUser)
-        }.body()
-
-    suspend fun getPartnershipHealth(): PartnershipHealthDTO =
-        client.get("$baseUrl/api/partnerships/current/health") {
-            authenticatedAs(this@TestUser)
-        }.body()
-
-    suspend fun getJobStatus(jobId: String): JobStatusDTO =
-        client.get("$baseUrl/api/jobs/$jobId") {
-            authenticatedAs(this@TestUser)
-        }.body()
+    // ============= HTTP Operations - Conflicts =============
 
     suspend fun createConflict(): ConflictDTO =
         client.post("$baseUrl/api/conflicts") {
             authenticatedAs(this@TestUser)
         }.expect(HttpStatusCode.Created).body()
+
+    suspend fun createConflictReadyForResolutions(): ConflictDTO {
+        val conflict = createConflict()
+        // Bypass feelings phase for test convenience
+        dbQuery {
+            Conflicts.update({ Conflicts.id eq UUID.fromString(conflict.id) }) {
+                it[status] = ConflictStatus.PENDING_RESOLUTIONS
+            }
+        }
+        return getConflict(conflict.id)
+    }
 
     suspend fun getConflict(id: String): ConflictDTO =
         client.get("$baseUrl/api/conflicts/$id") {
@@ -141,12 +174,335 @@ class TestUser(
             setBody(SubmitFeelingsRequest(feelingsText))
         }.expect(HttpStatusCode.OK).body()
 
-    suspend fun submitResolution(conflictId: String, resolutionText: String): ConflictDTO =
+    suspend fun submitResolution(conflictId: String, resolutionText: String = "My resolution"): ConflictDTO =
         client.post("$baseUrl/api/conflicts/$conflictId/resolutions") {
             authenticatedAs(this@TestUser)
             contentType(ContentType.Application.Json)
             setBody(SubmitResolutionRequest(resolutionText))
         }.expect(HttpStatusCode.OK).body()
+
+    suspend fun submitResolutionRaw(conflictId: String, resolutionText: String = "My resolution"): HttpResponse =
+        client.post("$baseUrl/api/conflicts/$conflictId/resolutions") {
+            authenticatedAs(this@TestUser)
+            contentType(ContentType.Application.Json)
+            setBody(SubmitResolutionRequest(resolutionText))
+        }
+
+    suspend fun getConflictSummary(id: String): AISummaryDTO =
+        client.get("$baseUrl/api/conflicts/$id/summary") {
+            authenticatedAs(this@TestUser)
+        }.expect(HttpStatusCode.OK).body()
+
+    suspend fun getConflictSummaryRaw(id: String): HttpResponse =
+        client.get("$baseUrl/api/conflicts/$id/summary") {
+            authenticatedAs(this@TestUser)
+        }
+
+    suspend fun approveSummary(id: String): Boolean =
+        client.post("$baseUrl/api/conflicts/$id/approve") {
+            authenticatedAs(this@TestUser)
+        }.expect(HttpStatusCode.OK).body<Map<String, Boolean>>()["success"]!!
+
+    suspend fun requestRefinement(id: String): Boolean =
+        client.patch("$baseUrl/api/conflicts/$id/request-refinement") {
+            authenticatedAs(this@TestUser)
+        }.expect(HttpStatusCode.OK).body<Map<String, Boolean>>()["success"]!!
+
+    suspend fun archiveConflict(id: String): Boolean =
+        client.patch("$baseUrl/api/conflicts/$id/archive") {
+            authenticatedAs(this@TestUser)
+        }.expect(HttpStatusCode.OK).body<Map<String, Boolean>>()["success"]!!
+
+    suspend fun waitForConflictStatus(
+        conflictId: String,
+        targetStatus: ConflictStatus,
+        maxAttempts: Int = 60,
+        delayMs: Long = 500
+    ): ConflictDTO {
+        repeat(maxAttempts) { attempt ->
+            val conflict = getConflict(conflictId)
+            if (conflict.status == targetStatus) {
+                return conflict
+            }
+            if (attempt < maxAttempts - 1) {
+                delay(delayMs)
+            }
+        }
+        val currentConflict = getConflict(conflictId)
+        throw AssertionError("Conflict did not reach status $targetStatus after ${maxAttempts * delayMs}ms. Current status: ${currentConflict.status}")
+    }
+
+    // ============= HTTP Operations - Decisions =============
+
+    suspend fun getDecisions(): List<DecisionDTO> =
+        client.get("$baseUrl/api/decisions") {
+            authenticatedAs(this@TestUser)
+        }.expect(HttpStatusCode.OK).body()
+
+    suspend fun getDecisionsRaw(): HttpResponse =
+        client.get("$baseUrl/api/decisions") {
+            authenticatedAs(this@TestUser)
+        }
+
+    suspend fun getDecision(id: String): DecisionDTO =
+        client.get("$baseUrl/api/decisions/$id") {
+            authenticatedAs(this@TestUser)
+        }.expect(HttpStatusCode.OK).body()
+
+    suspend fun getDecisionRaw(id: String): HttpResponse =
+        client.get("$baseUrl/api/decisions/$id") {
+            authenticatedAs(this@TestUser)
+        }
+
+    suspend fun reviewDecision(id: String): DecisionDTO =
+        client.patch("$baseUrl/api/decisions/$id/review") {
+            authenticatedAs(this@TestUser)
+        }.expect(HttpStatusCode.OK).body()
+
+    suspend fun reviewDecisionRaw(id: String): HttpResponse =
+        client.patch("$baseUrl/api/decisions/$id/review") {
+            authenticatedAs(this@TestUser)
+        }
+
+    suspend fun archiveDecision(id: String): DecisionDTO =
+        client.patch("$baseUrl/api/decisions/$id/archive") {
+            authenticatedAs(this@TestUser)
+        }.expect(HttpStatusCode.OK).body()
+
+    suspend fun archiveDecisionRaw(id: String): HttpResponse =
+        client.patch("$baseUrl/api/decisions/$id/archive") {
+            authenticatedAs(this@TestUser)
+        }
+
+    // ============= HTTP Operations - Notes =============
+
+    suspend fun createNote(text: String = "Note text"): NoteDTO =
+        client.post("$baseUrl/api/notes") {
+            authenticatedAs(this@TestUser)
+            contentType(ContentType.Application.Json)
+            setBody(CreateNoteRequest(text))
+        }.expect(HttpStatusCode.OK).body()
+
+    suspend fun createNoteRaw(text: String = "Note text"): HttpResponse =
+        client.post("$baseUrl/api/notes") {
+            authenticatedAs(this@TestUser)
+            contentType(ContentType.Application.Json)
+            setBody(CreateNoteRequest(text))
+        }
+
+    suspend fun getNote(id: String): NoteDTO =
+        client.get("$baseUrl/api/notes/$id") {
+            authenticatedAs(this@TestUser)
+        }.expect(HttpStatusCode.OK).body()
+
+    suspend fun getNoteRaw(id: String): HttpResponse =
+        client.get("$baseUrl/api/notes/$id") {
+            authenticatedAs(this@TestUser)
+        }
+
+    suspend fun updateNoteStatus(id: String, status: NoteStatus): NoteDTO =
+        client.patch("$baseUrl/api/notes/$id") {
+            authenticatedAs(this@TestUser)
+            contentType(ContentType.Application.Json)
+            setBody(UpdateNoteRequest(status = status.name.lowercase()))
+        }.expect(HttpStatusCode.OK).body()
+
+    suspend fun updateNoteStatusRaw(id: String, status: NoteStatus): HttpResponse =
+        client.patch("$baseUrl/api/notes/$id") {
+            authenticatedAs(this@TestUser)
+            contentType(ContentType.Application.Json)
+            setBody(UpdateNoteRequest(status = status.name.lowercase()))
+        }
+
+    suspend fun deleteNote(id: String): Boolean =
+        client.delete("$baseUrl/api/notes/$id") {
+            authenticatedAs(this@TestUser)
+        }.expect(HttpStatusCode.OK).body<Map<String, Boolean>>()["success"]!!
+
+    suspend fun deleteNoteRaw(id: String): HttpResponse =
+        client.delete("$baseUrl/api/notes/$id") {
+            authenticatedAs(this@TestUser)
+        }
+
+    // ============= HTTP Operations - Retrospectives =============
+
+    suspend fun createRetrospective(scheduledDate: String? = null, users: List<String>? = null): RetrospectiveDTO =
+        client.post("$baseUrl/api/retrospectives") {
+            authenticatedAs(this@TestUser)
+            contentType(ContentType.Application.Json)
+            setBody(CreateRetrospectiveRequest(scheduledDate, users))
+        }.expect(HttpStatusCode.OK).body()
+
+    suspend fun createRetrospectiveRaw(scheduledDate: String? = null, users: List<String>? = null): HttpResponse =
+        client.post("$baseUrl/api/retrospectives") {
+            authenticatedAs(this@TestUser)
+            contentType(ContentType.Application.Json)
+            setBody(CreateRetrospectiveRequest(scheduledDate, users))
+        }
+
+    suspend fun getRetrospective(id: String): RetrospectiveDTO =
+        client.get("$baseUrl/api/retrospectives/$id") {
+            authenticatedAs(this@TestUser)
+        }.expect(HttpStatusCode.OK).body()
+
+    suspend fun getRetrospectiveRaw(id: String): HttpResponse =
+        client.get("$baseUrl/api/retrospectives/$id") {
+            authenticatedAs(this@TestUser)
+        }
+
+    suspend fun getRetrospectives(): List<RetrospectiveDTO> =
+        client.get("$baseUrl/api/retrospectives") {
+            authenticatedAs(this@TestUser)
+        }.expect(HttpStatusCode.OK).body()
+
+    suspend fun getRetrospectivesRaw(): HttpResponse =
+        client.get("$baseUrl/api/retrospectives") {
+            authenticatedAs(this@TestUser)
+        }
+
+    suspend fun addNoteToRetro(retroId: String, noteId: String): Boolean =
+        client.post("$baseUrl/api/retrospectives/$retroId/notes") {
+            authenticatedAs(this@TestUser)
+            contentType(ContentType.Application.Json)
+            setBody(AddNoteToRetroRequest(noteId))
+        }.expect(HttpStatusCode.OK).body<Map<String, Boolean>>()["success"]!!
+
+    suspend fun addNoteToRetroRaw(retroId: String, noteId: String): HttpResponse =
+        client.post("$baseUrl/api/retrospectives/$retroId/notes") {
+            authenticatedAs(this@TestUser)
+            contentType(ContentType.Application.Json)
+            setBody(AddNoteToRetroRequest(noteId))
+        }
+
+    suspend fun getRetroNotes(id: String): RetrospectiveWithNotesDTO =
+        client.get("$baseUrl/api/retrospectives/$id/notes") {
+            authenticatedAs(this@TestUser)
+        }.expect(HttpStatusCode.OK).body()
+
+    suspend fun getRetroNotesRaw(id: String): HttpResponse =
+        client.get("$baseUrl/api/retrospectives/$id/notes") {
+            authenticatedAs(this@TestUser)
+        }
+
+    suspend fun approveRetro(id: String, approvalText: String = "I think it's very good action points"): Boolean =
+        client.patch("$baseUrl/api/retrospectives/$id/approve") {
+            authenticatedAs(this@TestUser)
+            contentType(ContentType.Application.Json)
+            setBody(ApproveRetrospectiveRequest(approvalText))
+        }.expect(HttpStatusCode.OK).body<Map<String, Boolean>>()["success"]!!
+
+    suspend fun completeRetro(id: String, finalSummary: String = "We discussed important topics"): Boolean =
+        client.post("$baseUrl/api/retrospectives/$id/complete") {
+            authenticatedAs(this@TestUser)
+            contentType(ContentType.Application.Json)
+            setBody(CompleteRetrospectiveRequest(finalSummary))
+        }.expect(HttpStatusCode.OK).body<Map<String, Boolean>>()["success"]!!
+
+    suspend fun completeRetroRaw(id: String, finalSummary: String = "We discussed important topics"): HttpResponse =
+        client.post("$baseUrl/api/retrospectives/$id/complete") {
+            authenticatedAs(this@TestUser)
+            contentType(ContentType.Application.Json)
+            setBody(CompleteRetrospectiveRequest(finalSummary))
+        }
+
+    suspend fun cancelRetro(id: String): Boolean =
+        client.patch("$baseUrl/api/retrospectives/$id/cancel") {
+            authenticatedAs(this@TestUser)
+        }.expect(HttpStatusCode.OK).body<Map<String, Boolean>>()["success"]!!
+
+    suspend fun cancelRetroRaw(id: String): HttpResponse =
+        client.patch("$baseUrl/api/retrospectives/$id/cancel") {
+            authenticatedAs(this@TestUser)
+        }
+
+    // ============= HTTP Operations - Partnerships =============
+
+    suspend fun sendInvite(email: String): PartnershipDTO =
+        client.post("$baseUrl/api/partnerships/invite") {
+            authenticatedAs(this@TestUser)
+            contentType(ContentType.Application.Json)
+            setBody(PartnerInviteRequest(email))
+        }.expect(HttpStatusCode.Created).body()
+
+    suspend fun sendInviteRaw(email: String): HttpResponse =
+        client.post("$baseUrl/api/partnerships/invite") {
+            authenticatedAs(this@TestUser)
+            contentType(ContentType.Application.Json)
+            setBody(PartnerInviteRequest(email))
+        }
+
+    suspend fun acceptInvite(id: String): PartnershipDTO =
+        client.post("$baseUrl/api/partnerships/$id/accept") {
+            authenticatedAs(this@TestUser)
+        }.expect(HttpStatusCode.OK).body()
+
+    suspend fun acceptInviteRaw(id: String): HttpResponse =
+        client.post("$baseUrl/api/partnerships/$id/accept") {
+            authenticatedAs(this@TestUser)
+        }
+
+    suspend fun rejectInvite(id: String) {
+        client.post("$baseUrl/api/partnerships/$id/reject") {
+            authenticatedAs(this@TestUser)
+        }.expect(HttpStatusCode.OK)
+    }
+
+    suspend fun rejectInviteRaw(id: String): HttpResponse =
+        client.post("$baseUrl/api/partnerships/$id/reject") {
+            authenticatedAs(this@TestUser)
+        }
+
+    suspend fun getInvitations(): PartnershipInvitationsDTO =
+        client.get("$baseUrl/api/partnerships/invitations") {
+            authenticatedAs(this@TestUser)
+        }.expect(HttpStatusCode.OK).body()
+
+    suspend fun getInvitationsRaw(): HttpResponse =
+        client.get("$baseUrl/api/partnerships/invitations") {
+            authenticatedAs(this@TestUser)
+        }
+
+    suspend fun getCurrentPartnership(): PartnershipDTO? {
+        val response = client.get("$baseUrl/api/partnerships/current") {
+            authenticatedAs(this@TestUser)
+        }
+        return if (response.status == HttpStatusCode.OK) {
+            response.body<PartnershipDTO>()
+        } else null
+    }
+
+    suspend fun getCurrentPartnershipRaw(): HttpResponse =
+        client.get("$baseUrl/api/partnerships/current") {
+            authenticatedAs(this@TestUser)
+        }
+
+    suspend fun endPartnership() {
+        client.delete("$baseUrl/api/partnerships/current") {
+            authenticatedAs(this@TestUser)
+        }.expect(HttpStatusCode.OK)
+    }
+
+    suspend fun endPartnershipRaw(): HttpResponse =
+        client.delete("$baseUrl/api/partnerships/current") {
+            authenticatedAs(this@TestUser)
+        }
+
+    // ============= HTTP Operations - Other =============
+
+    suspend fun getDashboard(): DashboardDTO =
+        client.get("$baseUrl/api/dashboard") {
+            authenticatedAs(this@TestUser)
+        }.body()
+
+    suspend fun getPartnershipHealth(): PartnershipHealthDTO =
+        client.get("$baseUrl/api/partnerships/current/health") {
+            authenticatedAs(this@TestUser)
+        }.body()
+
+    suspend fun getJobStatus(jobId: String): JobStatusDTO =
+        client.get("$baseUrl/api/jobs/$jobId") {
+            authenticatedAs(this@TestUser)
+        }.body()
 
     suspend fun createJournal(content: String): JournalEntryDTO =
         client.post("$baseUrl/api/journal") {
@@ -181,13 +537,24 @@ class ConflictBuilder(private val user: TestUser) {
         return this
     }
 
+    suspend fun createReadyForResolutions(): ConflictBuilder {
+        conflict = user.createConflictReadyForResolutions()
+        return this
+    }
+
     suspend fun withFeelings(text: String = "I feel frustrated about this"): ConflictBuilder {
         user.submitFeelings(conflict.id, text)
+        conflict = user.getConflict(conflict.id)
         return this
     }
 
     suspend fun withResolution(text: String = "We should talk more openly"): ConflictBuilder {
-        user.submitResolution(conflict.id, text)
+        conflict = user.submitResolution(conflict.id, text)
+        return this
+    }
+
+    suspend fun waitForStatus(status: ConflictStatus, maxAttempts: Int = 60, delayMs: Long = 500): ConflictBuilder {
+        conflict = user.waitForConflictStatus(conflict.id, status, maxAttempts, delayMs)
         return this
     }
 
@@ -198,6 +565,135 @@ class ConflictBuilder(private val user: TestUser) {
     suspend fun assertActions(block: suspend ConflictActionsAssertion.() -> Unit) {
         val actions = user.getConflictActions(conflict.id)
         ConflictActionsAssertion(actions).block()
+    }
+
+    suspend fun returningId(): String {
+        return conflict.id
+    }
+
+    suspend fun summary(block: suspend SummaryBuilder.() -> Unit): SummaryBuilder {
+        val builder = SummaryBuilder(user, conflict)
+        builder.block()
+        return builder
+    }
+}
+
+class SummaryBuilder(private val user: TestUser, private val conflict: ConflictDTO) {
+    lateinit var summary: AISummaryDTO
+
+    init {
+        runBlocking {
+            summary = user.getConflictSummary(conflict.id)
+        }
+    }
+
+    suspend fun assertState(block: suspend SummaryAssertion.() -> Unit) {
+        SummaryAssertion(summary).block()
+    }
+}
+
+class DecisionBuilder(private val user: TestUser, private val id: String) {
+    lateinit var decision: DecisionDTO
+
+    init {
+        kotlinx.coroutines.runBlocking {
+            decision = user.getDecision(id)
+        }
+    }
+
+    suspend fun review(): DecisionBuilder {
+        decision = user.reviewDecision(id)
+        return this
+    }
+
+    suspend fun archive(): DecisionBuilder {
+        decision = user.archiveDecision(id)
+        return this
+    }
+
+    suspend fun assertState(block: suspend DecisionAssertion.() -> Unit) {
+        decision = user.getDecision(decision.id)
+        DecisionAssertion(decision).block()
+    }
+}
+
+class NoteBuilder(private val user: TestUser, private val text: String) {
+    lateinit var note: NoteDTO
+
+    init {
+        kotlinx.coroutines.runBlocking {
+            note = user.createNote(text)
+        }
+    }
+
+    suspend fun markReadyForDiscussion(): NoteBuilder {
+        note = user.updateNoteStatus(note.id, NoteStatus.READY_FOR_DISCUSSION)
+        return this
+    }
+
+    suspend fun markDiscussed(): NoteBuilder {
+        note = user.updateNoteStatus(note.id, NoteStatus.DISCUSSED)
+        return this
+    }
+
+    suspend fun archive(): NoteBuilder {
+        note = user.updateNoteStatus(note.id, NoteStatus.ARCHIVED)
+        return this
+    }
+
+    suspend fun delete(): NoteBuilder {
+        user.deleteNote(note.id)
+        return this
+    }
+
+    suspend fun assertState(block: suspend NoteAssertion.() -> Unit) {
+        NoteAssertion(note).block()
+    }
+}
+
+class RetrospectiveBuilder(private val user: TestUser) {
+    lateinit var retrospective: RetrospectiveDTO
+
+    suspend fun create(scheduledDate: String? = null, users: List<String>? = null): RetrospectiveBuilder {
+        retrospective = user.createRetrospective(scheduledDate, users)
+        return this
+    }
+
+    suspend fun fetch(id: String): RetrospectiveBuilder {
+        retrospective = user.getRetrospective(id)
+        return this
+    }
+
+    suspend fun addNote(noteId: String): RetrospectiveBuilder {
+        user.addNoteToRetro(retrospective.id, noteId)
+        retrospective = user.getRetrospective(retrospective.id)
+        return this
+    }
+
+    suspend fun complete(finalSummary: String = "We discussed important topics"): RetrospectiveBuilder {
+        user.completeRetro(retrospective.id, finalSummary)
+        retrospective = user.getRetrospective(retrospective.id)
+        return this
+    }
+
+    suspend fun cancel(): RetrospectiveBuilder {
+        user.cancelRetro(retrospective.id)
+        retrospective = user.getRetrospective(retrospective.id)
+        return this
+    }
+
+    suspend fun approve(): RetrospectiveBuilder {
+        user.approveRetro(retrospective.id)
+        retrospective = user.getRetrospective(retrospective.id)
+        return this
+    }
+
+    suspend fun assertState(block: suspend RetrospectiveAssertion.() -> Unit) {
+        RetrospectiveAssertion(retrospective).block()
+    }
+
+    suspend fun returningId(): String {
+        return retrospective.id
     }
 }
 
@@ -240,23 +736,42 @@ class TestPartnership(
         user2 = context.user(user2Email, user2Name) {}
 
         // Send and accept invite
-        val client = context.client
-        val baseUrl = context.baseUrl
-
-        val inviteResponse = client.post("$baseUrl/api/partnerships/invite") {
-            authenticatedAs(user1)
-            contentType(ContentType.Application.Json)
-            setBody(PartnerInviteRequest(user2Email))
-        }
-        val partnership = inviteResponse.body<PartnershipDTO>()
-
-        client.post("$baseUrl/api/partnerships/${partnership.id}/accept") {
-            authenticatedAs(user2)
-        }
+        val partnership = user1.sendInvite(user2Email)
+        user2.acceptInvite(partnership.id)
 
         partnershipDTO = partnership
 
         this.block()
+    }
+
+    suspend fun withConflictResolved(
+        block: suspend TestPartnership.(conflictId: String) -> Unit = {}
+    ) {
+        users()
+
+        val conflictId = user1.conflict {
+            create()
+            withFeelings()
+        }.returningId()
+
+        user2.conflict {
+            fetch(conflictId)
+            withFeelings()
+        }
+
+        user2.waitForConflictStatus(conflictId, ConflictStatus.PENDING_RESOLUTIONS)
+
+        user1.submitResolution(conflictId)
+        user2.submitResolution(conflictId)
+
+        user2.waitForConflictStatus(conflictId, ConflictStatus.SUMMARY_GENERATED)
+
+        user1.approveSummary(conflictId)
+        user2.approveSummary(conflictId)
+
+        user2.waitForConflictStatus(conflictId, ConflictStatus.APPROVED)
+
+        block(conflictId)
     }
 }
 
@@ -269,7 +784,7 @@ class ConflictAssertion(private val conflict: ConflictDTO) {
             "Expected next action to contain '$expected' but was '${conflict.nextAction}'")
     }
 
-    fun hasStatus(expected: me.pavekovt.entity.ConflictStatus) {
+    fun hasStatus(expected: ConflictStatus) {
         assertEquals(expected, conflict.status, "Conflict status mismatch")
     }
 
@@ -349,6 +864,87 @@ class UserProgressAssertion(private val progress: UserProgress) {
     }
 }
 
+class DecisionAssertion(private val decision: DecisionDTO) {
+    fun hasStatus(expected: String) {
+        assertEquals(expected, decision.status, "Decision status mismatch")
+    }
+
+    fun hasReviewedAt() {
+        assertNotNull(decision.reviewedAt, "Decision is not reviewed")
+    }
+
+    fun hasId(id: String) {
+        assertEquals(id, decision.id, "Id mismatch")
+    }
+
+    fun hasSummary(expectedSubstring: String) {
+        assertTrue(decision.summary.contains(expectedSubstring, ignoreCase = true),
+            "Expected summary to contain '$expectedSubstring' but was '${decision.summary}'")
+    }
+
+    fun isReviewed() {
+        assertEquals("reviewed", decision.status, "Expected decision to be reviewed")
+        assertNotNull(decision.reviewedAt, "Expected reviewedAt to be set")
+    }
+
+    fun isActive() {
+        assertEquals("active", decision.status, "Expected decision to be active")
+    }
+
+    fun isArchived() {
+        assertEquals("archived", decision.status, "Expected decision to be archived")
+    }
+}
+
+class DecisionListAssertion(private val decisions: List<DecisionDTO>) {
+    fun hasCount(expected: Int) {
+        assertEquals(expected, decisions.size, "Expected $expected decisions but found ${decisions.size}")
+    }
+
+    fun isEmpty() {
+        assertTrue(decisions.isEmpty(), "Expected decisions to be empty but found ${decisions.size}")
+    }
+
+    fun isNotEmpty() {
+        assertTrue(decisions.isNotEmpty(), "Expected decisions to not be empty")
+    }
+
+    fun allHaveStatus(expected: String) {
+        assertTrue(decisions.all { it.status == expected },
+            "Expected all decisions to have status '$expected' but found: ${decisions.map { it.status }}")
+    }
+}
+
+class NoteAssertion(private val note: NoteDTO) {
+    fun hasStatus(expected: NoteStatus) {
+        assertEquals(expected.name.lowercase(), note.status, "Note status mismatch")
+    }
+
+    fun hasContent(expectedSubstring: String) {
+        assertTrue(note.content.contains(expectedSubstring, ignoreCase = true),
+            "Expected content to contain '$expectedSubstring' but was '${note.content}'")
+    }
+}
+
+class RetrospectiveAssertion(private val retro: RetrospectiveDTO) {
+    fun hasStatus(expected: String) {
+        assertEquals(expected, retro.status, "Retrospective status mismatch")
+    }
+
+    fun isCompleted() {
+        assertEquals("completed", retro.status, "Expected retrospective to be completed")
+        assertNotNull(retro.completedAt, "Expected completedAt to be set")
+    }
+
+    fun hasSummary(expected: String) {
+        assertEquals(retro.finalSummary, expected, "Final summary mismatch")
+    }
+
+    fun isCancelled() {
+        assertEquals("cancelled", retro.status, "Expected retrospective to be cancelled")
+    }
+}
+
 class DashboardAssertion(private val dashboard: DashboardDTO) {
     fun hasPendingActions(count: Int) {
         assertEquals(count, dashboard.pendingActions.size,
@@ -380,6 +976,12 @@ class DashboardSummaryAssertion(private val summary: DashboardSummary) {
     fun awaitingPartner(count: Int) {
         assertEquals(count, summary.conflictsAwaitingPartner,
             "Conflicts awaiting partner count mismatch")
+    }
+}
+
+class SummaryAssertion(private val summary: AISummaryDTO) {
+    fun hasText(expectedText: String) {
+        assertTrue(summary.summaryText.contains(expectedText), "Summary doesn't contain: $expectedText")
     }
 }
 
@@ -438,7 +1040,7 @@ fun HttpRequestBuilder.authenticatedAs(user: TestUser) {
 }
 
 suspend fun HttpResponse.expect(status: HttpStatusCode): HttpResponse {
-    assertEquals(status, this.status, "HTTP status mismatch")
+    assertEquals(status, this.status, "HTTP status mismatch, error ${this.bodyAsText()}")
     return this
 }
 

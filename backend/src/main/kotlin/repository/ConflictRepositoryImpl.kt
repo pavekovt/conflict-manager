@@ -4,6 +4,7 @@ import me.pavekovt.db.dbQuery
 import me.pavekovt.dto.ConflictDTO
 import me.pavekovt.entity.*
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.*
@@ -17,17 +18,18 @@ class ConflictRepositoryImpl : ConflictRepository {
         }
             .single()[Conflicts.id].value
 
-        buildConflictDTO(id, initiatedBy)
+        buildConflictDTO(id, initiatedBy, initiatedBy)
     }
 
-    override suspend fun findById(conflictId: UUID): ConflictDTO? = dbQuery {
+    override suspend fun findById(conflictId: UUID, currentUserId: UUID): ConflictDTO? = dbQuery {
         Conflicts.selectAll()
             .where { Conflicts.id eq conflictId }
             .singleOrNull()
             ?.let { row ->
                 buildConflictDTO(
                     conflictId = row[Conflicts.id].value,
-                    initiatedBy = row[Conflicts.initiatedBy].value
+                    initiatedBy = row[Conflicts.initiatedBy].value,
+                    currentUserId = currentUserId
                 )
             }
     }
@@ -40,7 +42,8 @@ class ConflictRepositoryImpl : ConflictRepository {
             .map { row ->
                 buildConflictDTO(
                     row[Conflicts.id].value,
-                    row[Conflicts.initiatedBy].value
+                    row[Conflicts.initiatedBy].value,
+                    userId
                 )
             }
 
@@ -50,7 +53,8 @@ class ConflictRepositoryImpl : ConflictRepository {
             .map { row ->
                 buildConflictDTO(
                     row[Conflicts.id].value,
-                    row[Conflicts.initiatedBy].value
+                    row[Conflicts.initiatedBy].value,
+                    userId
                 )
             }
 
@@ -81,15 +85,24 @@ class ConflictRepositoryImpl : ConflictRepository {
             .firstOrNull { it != currentUserId }
     }
 
-    private suspend fun buildConflictDTO(conflictId: UUID, initiatedBy: UUID): ConflictDTO {
+    private suspend fun buildConflictDTO(conflictId: UUID, initiatedBy: UUID, currentUserId: UUID): ConflictDTO {
         val conflict = Conflicts.selectAll()
             .where { Conflicts.id eq conflictId }
             .single()
 
-        val resolutionCount = Resolutions
+        // Check if current user has submitted resolution
+        val myResolution = Resolutions
+            .selectAll()
+            .where { (Resolutions.conflictId eq conflictId) and (Resolutions.userId eq currentUserId) }
+            .singleOrNull()
+
+        // Check if partner has submitted resolution
+        val allResolutions = Resolutions
             .selectAll()
             .where { Resolutions.conflictId eq conflictId }
-            .count()
+            .map { it[Resolutions.userId].value }
+
+        val partnerHasResolution = allResolutions.any { it != currentUserId }
 
         val hasSummary = AISummaries
             .selectAll()
@@ -101,8 +114,8 @@ class ConflictRepositoryImpl : ConflictRepository {
             initiatedBy = initiatedBy.toString(),
             status = conflict[Conflicts.status],
             createdAt = conflict[Conflicts.createdAt].toString(),
-            myResolutionSubmitted = resolutionCount > 0,
-            partnerResolutionSubmitted = resolutionCount == 2L,
+            myResolutionSubmitted = myResolution != null,
+            partnerResolutionSubmitted = partnerHasResolution,
             summaryAvailable = hasSummary
         )
     }

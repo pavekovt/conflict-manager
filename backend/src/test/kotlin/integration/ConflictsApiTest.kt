@@ -2,6 +2,7 @@ package me.pavekovt.integration
 
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import me.pavekovt.entity.ConflictStatus
 import me.pavekovt.integration.dsl.testApi
 import kotlin.test.Test
@@ -98,7 +99,7 @@ class ConflictsApiTest : IntegrationTestBase() {
         utils.run {
             // Given
             val (user1) = utils.registerPartners()
-            val conflict = user1.createConflict()
+            val conflict = user1.createConflictReadyForResolutions()
 
             // When
             val response = user1.submitConflictResolution(conflict.id)
@@ -113,7 +114,7 @@ class ConflictsApiTest : IntegrationTestBase() {
         utils.run {
             // Given
             val (user1) = utils.registerPartners()
-            val conflict = user1.createConflict()
+            val conflict = user1.createConflictReadyForResolutions()
 
             // Submit first resolution
             user1.submitConflictResolution(conflict.id)
@@ -128,22 +129,48 @@ class ConflictsApiTest : IntegrationTestBase() {
 
     @Test
     fun `AI summary should be generated when both partners submit resolutions`() = runBlocking {
-        utils.run {
-            // Given
-            val (user1, user2) = utils.registerPartners()
-            val conflict = user1.createConflict()
+        testApi(baseUrl, client) {
+            partnership {
+                users {
+                    val conflictId = user1.conflict {
+                        create()
+                        withFeelings()
+                    }.returningId()
 
-            // User 1 submits resolution
-            user1.submitConflictResolution(conflict.id)
+                    user2.conflict {
+                        fetch(conflictId)
+                        withFeelings()
+                    }
 
-            // When - User 2 submits resolution
-            user2.submitConflictResolution(conflict.id)
+                    user1.waitForConflictStatus(conflictId, ConflictStatus.PENDING_RESOLUTIONS)
 
-            // Then - summary should be available
-            val summary = user1.getConflictSummary(conflict.id)
+                    user1.conflict {
+                        fetch(conflictId)
+                        withResolution()
+                    }
 
-            assertNotNull(summary.summaryText)
-            assertTrue(summary.summaryText.contains("We decided", ignoreCase = true))
+                    user2.conflict {
+                        fetch(conflictId)
+                        withResolution()
+                    }
+
+                    user1.waitForConflictStatus(conflictId, ConflictStatus.SUMMARY_GENERATED)
+
+                    user1.conflict {
+                        fetch(conflictId)
+                        assertState {
+                            summaryAvailable()
+                            partnerResolutionSubmitted()
+                            myResolutionSubmitted()
+                        }
+                        summary {
+                            assertState {
+                                hasText("Moving forward, you'll both commit to this resolution")
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -162,16 +189,18 @@ class ConflictsApiTest : IntegrationTestBase() {
         }
     }
 
-    //TODO: fix the test
     @Test
     fun `PATCH approve should approve summary`() = runBlocking {
         utils.run {
             // Given
             val (user1, user2) = utils.registerPartners()
-            val conflict = user1.createConflict()
+            val conflict = user1.createConflictReadyForResolutions()
 
             user1.submitConflictResolution(conflict.id)
             user2.submitConflictResolution(conflict.id)
+
+            // Wait for async summary generation to complete
+            user1.waitForConflictStatus(conflict.id, ConflictStatus.SUMMARY_GENERATED)
 
             // When - User 1 approves summary
             user1.approveSummary(conflict.id)
@@ -187,10 +216,13 @@ class ConflictsApiTest : IntegrationTestBase() {
         utils.run {
             // Given
             val (user1, user2) = utils.registerPartners()
-            val conflict = user1.createConflict()
+            val conflict = user1.createConflictReadyForResolutions()
 
             user1.submitConflictResolution(conflict.id)
             user2.submitConflictResolution(conflict.id)
+
+            // Wait for async summary generation to complete
+            user1.waitForConflictStatus(conflict.id, ConflictStatus.SUMMARY_GENERATED)
 
             // When
             user1.requestConflictRefinement(conflict.id)

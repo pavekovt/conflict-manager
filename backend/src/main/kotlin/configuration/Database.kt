@@ -41,7 +41,8 @@ fun Application.configureDatabase() {
             PartnershipContext,
             RetrospectiveNotes,
             RetrospectiveUsers,
-            Jobs
+            Jobs,
+            JournalEntries
         )
     }
 }
