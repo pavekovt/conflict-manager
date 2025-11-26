@@ -55,7 +55,14 @@ class RetrospectiveServiceTest {
             status = "scheduled",
             aiDiscussionPoints = null,
             finalSummary = null,
-            createdAt = "2024-01-01T00:00:00"
+            createdAt = "2024-01-01T00:00:00",
+            partnerApprovalSubmitted = false,
+            canComplete = false,
+            approvalText1 = null,
+            approvalText2 = null,
+            myApprovalSubmitted = false,
+            approvedByUserId1 = null,
+            approvedByUserId2 = null,
         )
 
         coEvery {
@@ -83,7 +90,14 @@ class RetrospectiveServiceTest {
             status = "in_progress",
             aiDiscussionPoints = null,
             finalSummary = null,
-            createdAt = "2024-01-01T00:00:00"
+            createdAt = "2024-01-01T00:00:00",
+            partnerApprovalSubmitted = false,
+            canComplete = false,
+            approvalText1 = null,
+            approvalText2 = null,
+            myApprovalSubmitted = false,
+            approvedByUserId1 = null,
+            approvedByUserId2 = null,
         )
 
         coEvery {
@@ -111,7 +125,14 @@ class RetrospectiveServiceTest {
                 status = "in_progress",
                 aiDiscussionPoints = null,
                 finalSummary = null,
-                createdAt = "2024-01-01T00:00:00"
+                createdAt = "2024-01-01T00:00:00",
+                partnerApprovalSubmitted = false,
+                canComplete = false,
+                approvalText1 = null,
+                approvalText2 = null,
+                myApprovalSubmitted = false,
+                approvedByUserId1 = null,
+                approvedByUserId2 = null,
             )
         )
 
@@ -136,7 +157,14 @@ class RetrospectiveServiceTest {
             status = "in_progress",
             aiDiscussionPoints = null,
             finalSummary = null,
-            createdAt = "2024-01-01T00:00:00"
+            createdAt = "2024-01-01T00:00:00",
+            partnerApprovalSubmitted = false,
+            canComplete = false,
+            approvalText1 = null,
+            approvalText2 = null,
+            myApprovalSubmitted = false,
+            approvedByUserId1 = null,
+            approvedByUserId2 = null,
         )
 
         coEvery { retrospectiveRepository.findById(retroId) } returns retro
@@ -211,7 +239,11 @@ class RetrospectiveServiceTest {
             aiDiscussionPoints = null,
             finalSummary = null,
             notes = emptyList(),
-            createdAt = "2024-01-01T00:00:00"
+            createdAt = "2024-01-01T00:00:00",
+            approvalText1 = null,
+            approvalText2 = null,
+            approvedByUserId1 = null,
+            approvedByUserId2 = null,
         )
 
         coEvery { retrospectiveRepository.findByIdWithNotes(retroId) } returns retroWithNoNotes

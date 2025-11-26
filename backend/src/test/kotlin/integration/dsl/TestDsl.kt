@@ -48,7 +48,7 @@ class TestContext(
     private suspend fun registerUser(email: String, name: String): TestUser {
         val response = client.post("$baseUrl/api/auth/register") {
             contentType(ContentType.Application.Json)
-            setBody(RegisterRequest(email, name, "password123"))
+            setBody(RegisterRequest(name, email, "password123"))
         }
         assertEquals(HttpStatusCode.OK, response.status)
         val auth = response.body<AuthResponse>()
@@ -124,6 +124,11 @@ class TestUser(
             authenticatedAs(this@TestUser)
         }.expect(HttpStatusCode.OK).body()
 
+    suspend fun getConflicts(): List<ConflictDTO> =
+        client.get("$baseUrl/api/conflicts") {
+            authenticatedAs(this@TestUser)
+        }.expect(HttpStatusCode.OK).body()
+
     suspend fun getConflictActions(id: String): ConflictActionsDTO =
         client.get("$baseUrl/api/conflicts/$id/actions") {
             authenticatedAs(this@TestUser)
@@ -166,6 +171,11 @@ class TestUser(
 class ConflictBuilder(private val user: TestUser) {
     lateinit var conflict: ConflictDTO
 
+    suspend fun fetch(id: String): ConflictBuilder {
+        conflict = user.getConflict(id)
+        return this
+    }
+
     suspend fun create(): ConflictBuilder {
         conflict = user.createConflict()
         return this
@@ -182,8 +192,7 @@ class ConflictBuilder(private val user: TestUser) {
     }
 
     suspend fun assertState(block: suspend ConflictAssertion.() -> Unit) {
-        val current = user.getConflict(conflict.id)
-        ConflictAssertion(current).block()
+        ConflictAssertion(conflict).block()
     }
 
     suspend fun assertActions(block: suspend ConflictActionsAssertion.() -> Unit) {

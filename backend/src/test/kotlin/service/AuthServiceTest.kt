@@ -42,7 +42,10 @@ class AuthServiceTest {
             id = "test-id",
             email = email,
             name = name,
-            createdAt = "2024-01-01T00:00:00"
+            createdAt = "2024-01-01T00:00:00",
+            age = 20,
+            gender = "male",
+            description = ""
         )
 
         coEvery { userRepository.findByEmail(email) } returns null
@@ -69,7 +72,10 @@ class AuthServiceTest {
             id = "existing-id",
             email = email,
             name = name,
-            createdAt = "2024-01-01T00:00:00"
+            createdAt = "2024-01-01T00:00:00",
+            age = 20,
+            gender = "male",
+            description = ""
         )
 
         coEvery { userRepository.findByEmail(email) } returns existingUser
@@ -121,7 +127,10 @@ class AuthServiceTest {
             id = "test-id",
             email = email,
             name = "Test User",
-            createdAt = "2024-01-01T00:00:00"
+            createdAt = "2024-01-01T00:00:00",
+            age = 20,
+            gender = "male",
+            description = ""
         )
 
         coEvery { userRepository.getUserPassword(email) } returns passwordHash

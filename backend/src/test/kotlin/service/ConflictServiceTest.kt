@@ -16,6 +16,7 @@ import kotlin.test.*
 class ConflictServiceTest {
 
     private lateinit var conflictRepository: ConflictRepository
+    private lateinit var conflictFeelingsRepository: ConflictFeelingsRepository
     private lateinit var resolutionRepository: ResolutionRepository
     private lateinit var aiSummaryRepository: AISummaryRepository
     private lateinit var decisionRepository: DecisionRepository
@@ -30,16 +31,19 @@ class ConflictServiceTest {
     @BeforeTest
     fun setup() {
         conflictRepository = mockk()
+        conflictFeelingsRepository = mockk()
         resolutionRepository = mockk()
         aiSummaryRepository = mockk()
         decisionRepository = mockk()
         aiProvider = mockk()
         conflictService = ConflictService(
             conflictRepository,
+            conflictFeelingsRepository,
             resolutionRepository,
             aiSummaryRepository,
             decisionRepository,
-            aiProvider
+            mockk(),
+            mockk()
         )
     }
 
@@ -203,7 +207,7 @@ class ConflictServiceTest {
         assertEquals(conflict, result)
         coVerify { resolutionRepository.create(conflictId, userId, resolutionText) }
         coVerify { resolutionRepository.getBothResolutions(conflictId) }
-        coVerify(exactly = 0) { aiProvider.summarizeConflict(any(), any(), any()) }
+        coVerify(exactly = 0) { aiProvider.summarizeConflict(any(), any(), any(), any()) }
     }
 
     @Test
@@ -240,7 +244,7 @@ class ConflictServiceTest {
         coEvery { resolutionRepository.hasResolution(conflictId, userId) } returns false
         coEvery { resolutionRepository.create(conflictId, userId, resolutionText) } returns createdResolution
         coEvery { resolutionRepository.getBothResolutions(conflictId) } returns Pair(resolution1Text, resolution2Text)
-        coEvery { aiProvider.summarizeConflict(resolution1Text, resolution2Text, any()) } returns summaryResult
+        coEvery { aiProvider.summarizeConflict(resolution1Text, resolution2Text, any(), any()) } returns summaryResult
         coEvery { aiSummaryRepository.create(
             conflictId,
             summaryResult.summary,
@@ -260,7 +264,7 @@ class ConflictServiceTest {
         assertEquals(updatedConflict, result)
         coVerify { resolutionRepository.create(conflictId, userId, resolutionText) }
         coVerify { resolutionRepository.getBothResolutions(conflictId) }
-        coVerify { aiProvider.summarizeConflict(resolution1Text, resolution2Text, any()) }
+        coVerify { aiProvider.summarizeConflict(resolution1Text, resolution2Text, any(), any()) }
         coVerify { aiSummaryRepository.create(
             conflictId,
             summaryResult.summary,

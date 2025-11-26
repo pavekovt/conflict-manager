@@ -17,6 +17,7 @@ class ConflictsApiTest : IntegrationTestBase() {
             partnership {
                 users {
                     user1.conflict {
+                        create()
                         assertState {
                             hasStatus(ConflictStatus.PENDING_FEELINGS)
                             myResolutionSubmitted(false)
@@ -27,37 +28,22 @@ class ConflictsApiTest : IntegrationTestBase() {
                 }
             }
         }
-        utils.run {
-            // Given
-            val (user) = utils.registerPartners()
-
-            // When
-            val conflict = user.createConflict()
-
-            // Then
-            assertNotNull(conflict.id)
-            assertNotNull(conflict.initiatedBy)
-            assertEquals(ConflictStatus.PENDING_RESOLUTIONS, conflict.status)
-            assertEquals(false, conflict.myResolutionSubmitted)
-            assertEquals(false, conflict.partnerResolutionSubmitted)
-            assertEquals(false, conflict.summaryAvailable)
-        }
     }
 
     @Test
     fun `GET conflicts should return user's conflicts`() = runBlocking {
-        // Given
-        utils.run {
-            val (user1) = utils.registerPartners()
+        testApi(baseUrl, client) {
+            partnership {
+                users {
+                    user1.conflict {
+                        create()
+                    }
 
-            // Given
-            user1.createConflict()
-
-            // When
-            val response = user1.getConflicts()
-
-            // Then
-            assertTrue(response.isNotEmpty())
+                    user1.getConflicts().also {
+                        assertTrue(it.isNotEmpty())
+                    }
+                }
+            }
         }
     }
 
