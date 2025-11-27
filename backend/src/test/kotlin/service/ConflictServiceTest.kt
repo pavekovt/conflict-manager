@@ -7,8 +7,11 @@ import me.pavekovt.ai.SummaryResult
 import me.pavekovt.dto.AISummaryDTO
 import me.pavekovt.dto.ConflictDTO
 import me.pavekovt.dto.DecisionDTO
+import me.pavekovt.dto.JobDTO
 import me.pavekovt.dto.ResolutionDTO
 import me.pavekovt.entity.ConflictStatus
+import me.pavekovt.entity.JobStatus
+import me.pavekovt.entity.JobType
 import me.pavekovt.repository.*
 import java.util.UUID
 import kotlin.test.*
@@ -20,6 +23,8 @@ class ConflictServiceTest {
     private lateinit var resolutionRepository: ResolutionRepository
     private lateinit var aiSummaryRepository: AISummaryRepository
     private lateinit var decisionRepository: DecisionRepository
+    private lateinit var jobRepository: JobRepository
+    private lateinit var jobProcessorService: JobProcessorService
     private lateinit var aiProvider: AIProvider
     private lateinit var conflictService: ConflictService
 
@@ -27,6 +32,7 @@ class ConflictServiceTest {
     private val partnerId = UUID.randomUUID()
     private val conflictId = UUID.randomUUID()
     private val summaryId = UUID.randomUUID()
+    private val jobId = UUID.randomUUID()
 
     @BeforeTest
     fun setup() {
@@ -35,6 +41,8 @@ class ConflictServiceTest {
         resolutionRepository = mockk()
         aiSummaryRepository = mockk()
         decisionRepository = mockk()
+        jobRepository = mockk()
+        jobProcessorService = mockk()
         aiProvider = mockk()
         conflictService = ConflictService(
             conflictRepository,
@@ -42,8 +50,8 @@ class ConflictServiceTest {
             resolutionRepository,
             aiSummaryRepository,
             decisionRepository,
-            mockk(),
-            mockk()
+            jobRepository,
+            jobProcessorService
         )
     }
 
@@ -211,7 +219,7 @@ class ConflictServiceTest {
     }
 
     @Test
-    fun `submitResolution should generate AI summary when both resolutions submitted`() = runBlocking {
+    fun `submitResolution should queue AI summary job when both resolutions submitted`() = runBlocking {
         // Given
         val resolutionText = "My resolution"
         val resolution1Text = "Resolution 1"
@@ -223,38 +231,34 @@ class ConflictServiceTest {
             resolutionText = resolutionText,
             submittedAt = "2024-01-01T00:00:00"
         )
-        val summaryResult = SummaryResult(
-            summary = "AI generated summary",
-            patterns = "Pattern analysis",
-            advice = "Some advice",
-            recurringIssues = listOf("Issue 1"),
-            themeTags = listOf("communication"),
-            provider = "mock-ai"
+        val createdJob = JobDTO(
+            id = jobId.toString(),
+            jobType = JobType.GENERATE_SUMMARY,
+            status = JobStatus.PENDING,
+            entityId = conflictId.toString(),
+            payload = null,
+            errorMessage = null,
+            createdAt = "2024-01-01T00:00:00",
+            startedAt = null,
+            completedAt = null,
+            retryCount = 0
         )
         val updatedConflict = ConflictDTO(
             id = conflictId.toString(),
             initiatedBy = userId.toString(),
-            status = ConflictStatus.SUMMARY_GENERATED,
+            status = ConflictStatus.PROCESSING_SUMMARY,
             createdAt = "2024-01-01T00:00:00",
             myResolutionSubmitted = true,
             partnerResolutionSubmitted = true,
-            summaryAvailable = true
+            summaryAvailable = false
         )
 
         coEvery { resolutionRepository.hasResolution(conflictId, userId) } returns false
         coEvery { resolutionRepository.create(conflictId, userId, resolutionText) } returns createdResolution
         coEvery { resolutionRepository.getBothResolutions(conflictId) } returns Pair(resolution1Text, resolution2Text)
-        coEvery { aiProvider.summarizeConflict(resolution1Text, resolution2Text, any(), any()) } returns summaryResult
-        coEvery { aiSummaryRepository.create(
-            conflictId,
-            summaryResult.summary,
-            summaryResult.provider,
-            summaryResult.patterns,
-            summaryResult.advice,
-            summaryResult.recurringIssues,
-            summaryResult.themeTags
-        ) } returns summaryId
-        coEvery { conflictRepository.updateStatus(conflictId, ConflictStatus.SUMMARY_GENERATED) } returns true
+        coEvery { conflictRepository.updateStatus(conflictId, ConflictStatus.PROCESSING_SUMMARY) } returns true
+        coEvery { jobRepository.create(JobType.GENERATE_SUMMARY, conflictId, null) } returns createdJob
+        coEvery { jobProcessorService.queueJob(jobId) } just Runs
         coEvery { conflictRepository.findById(conflictId, userId) } returns updatedConflict
 
         // When
@@ -264,17 +268,9 @@ class ConflictServiceTest {
         assertEquals(updatedConflict, result)
         coVerify { resolutionRepository.create(conflictId, userId, resolutionText) }
         coVerify { resolutionRepository.getBothResolutions(conflictId) }
-        coVerify { aiProvider.summarizeConflict(resolution1Text, resolution2Text, any(), any()) }
-        coVerify { aiSummaryRepository.create(
-            conflictId,
-            summaryResult.summary,
-            summaryResult.provider,
-            summaryResult.patterns,
-            summaryResult.advice,
-            summaryResult.recurringIssues,
-            summaryResult.themeTags
-        ) }
-        coVerify { conflictRepository.updateStatus(conflictId, ConflictStatus.SUMMARY_GENERATED) }
+        coVerify { conflictRepository.updateStatus(conflictId, ConflictStatus.PROCESSING_SUMMARY) }
+        coVerify { jobRepository.create(JobType.GENERATE_SUMMARY, conflictId, null) }
+        coVerify { jobProcessorService.queueJob(jobId) }
     }
 
     @Test

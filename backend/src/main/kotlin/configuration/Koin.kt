@@ -15,6 +15,7 @@ import me.pavekovt.properties.AIProperties
 import me.pavekovt.properties.AuthenticationProperties
 import me.pavekovt.repository.*
 import me.pavekovt.service.*
+import me.pavekovt.service.job.*
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
@@ -135,7 +136,18 @@ fun Application.configureFrameworks() {
             /**
              * Background Job Processing (async AI operations)
              */
-            single { JobProcessorService(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+            // Job helpers
+            single { UserProfileLoader(get()) }
+            single { PartnershipContextLoader(get(), get(), get()) }
+
+            // Job handlers
+            single { ProcessFeelingsJobHandler(get(), get(), get(), get(), get(), get(), get()) }
+            single { GenerateSummaryJobHandler(get(), get(), get(), get(), get(), get()) }
+            single { GenerateDiscussionPointsJobHandler(get(), get(), get()) }
+            single { UpdatePartnershipContextJobHandler(get(), get(), get(), get(), get(), get(), get()) }
+
+            // Main job processor
+            single { JobProcessorService(get(), get(), get(), get(), get()) }
 
 
             /**

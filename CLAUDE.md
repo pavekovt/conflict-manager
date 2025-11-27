@@ -839,3 +839,4 @@ postman/
 9. **Production-Ready** - Comprehensive error handling, retry logic, and testing
 
 **The backend is feature-complete and ready for frontend development!** 🚀
+- dont write .md files, except when user dileberately asks for it
